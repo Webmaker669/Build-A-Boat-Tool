@@ -11,7 +11,8 @@ ScreenGui.Name = "CircleBuilderUI"
 ScreenGui.ResetOnSpawn = false
 
 local MainFrame = Instance.new("Frame", ScreenGui)
-MainFrame.Size = UDim2.new(0, 330, 0, 520)
+-- FIX: Height adjusted to 560 to fit the new block input box cleanly
+MainFrame.Size = UDim2.new(0, 330, 0, 560)
 MainFrame.Position = UDim2.new(0.05, 0, 0.15, 0)
 MainFrame.BackgroundColor3 = Color3.fromRGB(28, 28, 32)
 MainFrame.BorderSizePixel = 0
@@ -88,14 +89,17 @@ end
 local inputRadius = createInputField("Circle Radius / Range:", 60, "20", true)
 local inputSteps = createInputField("Total Parts Count:", 100, "30", true)
 local inputSizeY = createInputField("Block Height (Y):", 140, "2", true)
-local inputSizeX = createInputField("Calculated Width (X):", 180, "0.00", false)
-local inputSizeZ = createInputField("Calculated Depth (Z):", 220, "0.00", false)
+local inputBlockType = createInputField("Active Block Type:", 180, "PlasticBlock", true)
+
+local inputSizeX = createInputField("Calculated Width (X):", 220, "0.00", false)
+local inputSizeZ = createInputField("Calculated Depth (Z):", 260, "0.00", false)
 
 _G.CircleBuilderUI_SharedData = {
 	MainFrame = MainFrame,
 	inputRadius = inputRadius,
 	inputSteps = inputSteps,
 	inputSizeY = inputSizeY,
+	inputBlockType = inputBlockType,
 	inputSizeX = inputSizeX,
 	inputSizeZ = inputSizeZ,
 	CloseBtn = CloseBtn,
@@ -122,7 +126,7 @@ local colorData = _G.ActiveCircleBuilderColorData
 
 local colorLabel = Instance.new("TextLabel", MainFrame)
 colorLabel.Size = UDim2.new(0, 150, 0, 30)
-colorLabel.Position = UDim2.new(0, 15, 0, 260)
+colorLabel.Position = UDim2.new(0, 15, 0, 295) -- Shifted downward
 colorLabel.Text = "Active Build Color:"
 colorLabel.TextColor3 = Color3.fromRGB(190, 190, 195)
 colorLabel.TextSize = 13
@@ -132,7 +136,7 @@ colorLabel.Font = Enum.Font.Gotham
 
 local btnColorPicker = Instance.new("TextButton", MainFrame)
 btnColorPicker.Size = UDim2.new(0, 130, 0, 28)
-btnColorPicker.Position = UDim2.new(0, 175, 0, 260)
+btnColorPicker.Position = UDim2.new(0, 175, 0, 295) -- Shifted downward
 btnColorPicker.Text = ""
 btnColorPicker.Font = Enum.Font.GothamBold
 btnColorPicker.BackgroundColor3 = colorData.ColorObject
@@ -140,7 +144,7 @@ Instance.new("UICorner", btnColorPicker).CornerRadius = UDim.new(0, 5)
 
 local statusLabel = Instance.new("TextLabel", MainFrame)
 statusLabel.Size = UDim2.new(1, -30, 0, 30)
-statusLabel.Position = UDim2.new(0, 15, 0, 295)
+statusLabel.Position = UDim2.new(0, 15, 0, 335) -- Shifted downward
 statusLabel.Text = "Center Target Block: Not Selected"
 statusLabel.TextColor3 = Color3.fromRGB(240, 90, 90)
 statusLabel.TextSize = 12
@@ -161,9 +165,9 @@ local function createButton(text, yPos, color)
 	return btn
 end
 
-local btnSelect = createButton("Select Center Target Block", 335, Color3.fromRGB(0, 122, 215))
-local btnPreview = createButton("Hologram Preview Configuration: Disabled", 376, Color3.fromRGB(110, 110, 115))
-local btnBuild = createButton("Commence Circle Construction", 417, Color3.fromRGB(46, 139, 87))
+local btnSelect = createButton("Select Center Target Block", 375, Color3.fromRGB(0, 122, 215))
+local btnPreview = createButton("Hologram Preview Configuration: Disabled", 416, Color3.fromRGB(110, 110, 115))
+local btnBuild = createButton("Commence Circle Construction", 457, Color3.fromRGB(46, 139, 87))
 
 local HelpPanel = Instance.new("Frame", MainFrame)
 HelpPanel.Name = "HelpSelectionPanel"
@@ -290,7 +294,7 @@ uiData.HelpPanel = HelpPanel
 -- // END OF FILE: Part_2_Submenus.lua //
 
 -- =============================================================================
--- INTERFACE SUBSYSTEMS: HOLOGRAM RESPONSIVENESS & INPUT TRACKING
+-- INTERACTIVE SUBSYSTEMS: HOLOGRAM RESPONSIVENESS & INPUT TRACKING
 -- =============================================================================
 local CoreGui = game:GetService("CoreGui")
 local RunService = game:GetService("RunService")
@@ -482,16 +486,74 @@ uiData.LocalPlayer = LocalPlayer
 -- // END OF FILE: Part_3_Physics.lua //
 
 -- =============================================================================
--- PLACEMENT PIPELINE: TARGET SELECTION & SERVER PLACEMENT NETWORK
+-- PART 4: DATA FIELD SYNCHRONIZATION & QUANTITY SYSTEM TRACKING
 -- =============================================================================
 local Players = game:GetService("Players")
+local LocalPlayer = Players.LocalPlayer
+
 local uiData = _G.CircleBuilderUI_SharedData
 local colorData = _G.ActiveCircleBuilderColorData
-if not uiData or not uiData.updateRealtimeVisualizerRing then error("Run Part 3 first.") end
+
+if not uiData or not uiData.inputBlockType then 
+	error("Sequence Interrupted: Run Part 3 first.") 
+end
+
+local MainFrame = uiData.MainFrame
+local statusLabel = uiData.statusLabel
+local btnSelect = uiData.btnSelect
+local btnPreview = uiData.btnPreview
+local btnBuild = uiData.btnBuild
+local inputBlockType = uiData.inputBlockType
+
+local dataFolder = LocalPlayer:WaitForChild("Data", 5)
+
+-- Push down your original action buttons uniformly to sit cleanly below the new entry field
+statusLabel.Position = UDim2.new(0, 15, 0, 335)
+btnSelect.Position = UDim2.new(0, 15, 0, 375)
+btnPreview.Position = UDim2.new(0, 15, 0, 416)
+btnBuild.Position = UDim2.new(0, 15, 0, 457)
+
+-- Function to safely verify if the player owns the typed block and has items left
+local function verifyMaterialQuantity()
+	local selectedBlockString = tostring(inputBlockType.Text)
+	local blockObjectValue = dataFolder and dataFolder:FindFirstChild(selectedBlockString)
+	
+	if not blockObjectValue then
+		return false, 0
+	end
+	
+	if blockObjectValue:IsA("ValueBase") then
+		return blockObjectValue.Value > 0, blockObjectValue.Value
+	end
+	
+	return false, 0
+end
+
+-- Share tracking data functions out globally so Part 5 can instantly execute them
+uiData.verifyMaterialQuantity = verifyMaterialQuantity
+uiData.dataFolder = dataFolder
+
+-- // END OF FILE: Part_4_Tracking.lua //
+
+-- =============================================================================
+-- PART 5: RAYCAST TARGET LOCKS & SERVER PLACEMENT NETWORK PIPES
+-- =============================================================================
+local Players = game:GetService("Players")
+local LocalPlayer = Players.LocalPlayer
+local Mouse = LocalPlayer:GetMouse()
+local RunService = game:GetService("RunService")
+
+local uiData = _G.CircleBuilderUI_SharedData
+local colorData = _G.ActiveCircleBuilderColorData
+
+if not uiData or not uiData.verifyMaterialQuantity then 
+	error("Sequence Interrupted: Run Part 4 first.") 
+end
 
 local inputRadius = uiData.inputRadius
 local inputSteps = uiData.inputSteps
 local inputSizeY = uiData.inputSizeY
+local inputBlockType = uiData.inputBlockType
 local statusLabel = uiData.statusLabel
 local btnPreview = uiData.btnPreview
 local btnBuild = uiData.btnBuild
@@ -500,17 +562,11 @@ local btnSelect = uiData.btnSelect
 local selectionBox = uiData.selectionBox
 local ColorPanel = uiData.ColorPanel
 local HelpPanel = uiData.HelpPanel
-local Mouse = uiData.Mouse
-local RunService = uiData.RunService
-local LocalPlayer = uiData.LocalPlayer
 
 local isSelecting = false
-local blockName = "PlasticBlock"
+local folder = workspace:WaitForChild("Blocks", 5):WaitForChild(LocalPlayer.Name, 5)
 
--- Wait for the local data folder and the specific item value to load safely
-local dataFolder = LocalPlayer:WaitForChild("Data", 5)
-local dynamicValueObject = dataFolder and dataFolder:WaitForChild("PlasticBlock", 5)
-
+-- Raycast Crosshair coordinate vector tracking routines
 btnSelect.MouseButton1Click:Connect(function()
 	if isSelecting then return end
 	isSelecting = true
@@ -542,21 +598,25 @@ btnSelect.MouseButton1Click:Connect(function()
 	end)
 end)
 
+-- Construction deploy engine invocation routines
 btnBuild.MouseButton1Click:Connect(function()
 	local selectedCenterPos = uiData.selectedCenterPos
 	if isSelecting or not selectedCenterPos then return end
 	
-	-- FIX: Dynamically grabs your live block data value, defaulting to 8001 if the folder is missing
-	local targetValueId = 8001
-	if dynamicValueObject and dynamicValueObject:IsA("ValueBase") then
-		targetValueId = dynamicValueObject.Value
-	else
-		warn("Circle Builder: Could not find LocalPlayer.Data.PlasticBlock! Using 8001 fallback value.")
+	-- Uses the checker function from Part 4 to pull live total quantities
+	local selectedBlockString = tostring(inputBlockType.Text)
+	local canBuild, currentInventoryCount = uiData.verifyMaterialQuantity()
+	
+	if not canBuild then
+		statusLabel.Text = "Build Failed: Out of " .. selectedBlockString .. "!"
+		statusLabel.TextColor3 = Color3.fromRGB(255, 80, 80)
+		return
 	end
 	
 	local radius = tonumber(inputRadius.Text) or 20
 	local steps = tonumber(inputSteps.Text) or 30
 	local sizeY = tonumber(inputSizeY.Text) or 2
+	
 	local circumference = 2 * math.pi * radius
 	local sizeZ = circumference / steps
 	local sizeX = (2 * radius * math.tan(math.pi / steps)) + 0.02
@@ -576,18 +636,27 @@ btnBuild.MouseButton1Click:Connect(function()
 	previewFolder:ClearAllChildren()
 	ColorPanel.Visible = false
 	HelpPanel.Visible = false
+	
 	btnBuild.Text, btnBuild.Active = "Constructing Active Sector Matrix...", false
 	
-	local folder = workspace:WaitForChild("Blocks", 5):WaitForChild(LocalPlayer.Name, 5)
+	local blockTrackValueInstance = uiData.dataFolder:FindFirstChild(selectedBlockString)
 	
 	for i = 1, steps do
+		-- Safety cutoff instantly pauses if block data inventory hits zero mid-air
+		if blockTrackValueInstance and blockTrackValueInstance.Value <= 0 then
+			statusLabel.Text = "Interrupted: Ran out of " .. selectedBlockString .. "!"
+			statusLabel.TextColor3 = Color3.fromRGB(255, 80, 80)
+			break
+		end
+
 		local angle = (i / steps) * math.pi * 2
 		local targetPlacementPos = Vector3.new(selectedCenterPos.X + math.cos(angle) * radius, selectedCenterPos.Y, selectedCenterPos.Z + math.sin(angle) * radius)
+		
 		local pCF, hCF = CFrame.lookAt(targetPlacementPos, selectedCenterPos), CFrame.new(targetPlacementPos) * CFrame.Angles(0, angle, 0)
 		local initialChildren = folder:GetChildren()
 		
-		-- FIX: Passes your dynamic value variable instead of the hardcoded 8001 number integer
-		bRF:InvokeServer(blockName, targetValueId, Instance.new("Part", nil), pCF, true, hCF, false)
+		-- Passes your dynamic UI input variable straight into the remote parameters
+		bRF:InvokeServer(selectedBlockString, 8001, Instance.new("Part", nil), pCF, true, hCF, false)
 		
 		local dynamicBlockPath, retries = nil, 0
 		while not dynamicBlockPath and retries < 30 do
@@ -619,7 +688,9 @@ btnBuild.MouseButton1Click:Connect(function()
 	end
 	
 	btnBuild.Text, btnBuild.Active = "Commence Circle Construction", true
-	statusLabel.Text, statusLabel.TextColor3 = "Matrix Sequence Completed!", Color3.fromRGB(80, 240, 80)
+	if not string.find(statusLabel.Text, "Interrupted") then
+		statusLabel.Text, statusLabel.TextColor3 = "Matrix Sequence Completed!", Color3.fromRGB(80, 240, 80)
+	end
 end)
--- // END OF FILE: Part_4_Engine.lua //
 
+-- // END OF FILE: Part_5_Engine.lua //
