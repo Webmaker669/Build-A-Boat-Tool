@@ -11,7 +11,8 @@ ScreenGui.Name = "CircleBuilderUI"
 ScreenGui.ResetOnSpawn = false
 
 local MainFrame = Instance.new("Frame", ScreenGui)
-MainFrame.Size = UDim2.new(0, 330, 0, 560)
+-- FIX: Expanded canvas vertical boundaries up to 600px height to accommodate the discord container floor layout cleanly
+MainFrame.Size = UDim2.new(0, 330, 0, 600)
 MainFrame.Position = UDim2.new(0.05, 0, 0.15, 0)
 MainFrame.BackgroundColor3 = Color3.fromRGB(28, 28, 32)
 MainFrame.Active = true
@@ -86,7 +87,7 @@ _G.CBuilder_CoreUI = {
 -- // END OF FILE: Part_1.lua //
 
 -- =============================================================================
--- PART 2: CONTROL SECTOR & SPACING ALIGNMENT
+-- PART 2: CONTROL SECTOR & SPACING ALIGNMENT WITH DISCORD ELECTION
 -- =============================================================================
 local core = _G.CBuilder_CoreUI
 if not core then error("Critical Stack Trace Mismatch: Run Part 1 first.") end
@@ -118,6 +119,19 @@ end
 local btnSelect = createButton("Select Center Target Block", 345, Color3.fromRGB(0, 122, 215))
 local btnPreview = createButton("Hologram Preview Configuration: Disabled", 388, Color3.fromRGB(110, 110, 115))
 local btnBuild = createButton("Commence Circle Construction", 431, Color3.fromRGB(46, 139, 87))
+
+-- NEW/RESTORED: Discord copy textbox element embedded securely onto main panel floor metrics 
+local CopyBox = Instance.new("TextBox", MainFrame)
+CopyBox.Size = UDim2.new(1, -30, 0, 32)
+CopyBox.Position = UDim2.new(0, 15, 1, -45) -- Padded perfectly near the bottom floor geometry boundary
+CopyBox.Text = "https://discord.com/invite/3xCwTAYhXe"
+CopyBox.TextColor3 = Color3.fromRGB(114, 137, 218)
+CopyBox.BackgroundColor3 = Color3.fromRGB(44, 47, 51)
+CopyBox.Font = Enum.Font.GothamBold
+CopyBox.TextSize = 11
+CopyBox.ClearTextOnFocus = false
+CopyBox.TextEditable = false
+Instance.new("UICorner", CopyBox).CornerRadius = UDim.new(0, 6)
 
 _G.CBuilder_Buttons = {
 	statusLabel = statusLabel, btnSelect = btnSelect, btnPreview = btnPreview, btnBuild = btnBuild
@@ -302,7 +316,7 @@ btnBuild.MouseButton1Click:Connect(function()
 		local pCF, hCF = CFrame.lookAt(p, _G.CBuilder_CenterPos), CFrame.new(p) * CFrame.Angles(0, angle, 0)
 		local initialCount = #folder:GetChildren()
 		
-		-- PASSES USER'S EXACT INVENTORY QUANTITY VALUE FROM YOUR DATA DATA TRACKER FOLDER
+		-- Dynamic invocation passing item name and live data value total counts
 		bRF:InvokeServer(blockStr, inventoryItem.Value, Instance.new("Part", nil), pCF, true, hCF, false)
 		
 		local newBlock, loops = nil, 0
