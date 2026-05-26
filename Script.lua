@@ -426,7 +426,6 @@ local function updateRealtimeVisualizerRing()
 end
 
 local function applyColorTransformations()
-    -- FIX: Keeps Color3.new logic so the math reads fraction updates (0-1) correctly
     colorData.ColorObject = Color3.new(colorData.CurrentR, colorData.CurrentG, colorData.CurrentB)
     ColorIndicator.BackgroundColor3, btnColorPicker.BackgroundColor3 = colorData.ColorObject, colorData.ColorObject
     updateRealtimeVisualizerRing()
@@ -607,6 +606,7 @@ btnBuild.MouseButton1Click:Connect(function()
         end
         
         if dynamicBlockPath then
-            local sVec = (vector and vector.create) and vector.create(sizeX, sizeY, sizeZ) or Vector3.new(sizeX, sizeY, sizeZ)
+            -- FIX: Changed to clean Vector3 construction to fix execution errors on basic environments
+            local sVec = Vector3.new(sizeX, sizeY, sizeZ)
             sRF:InvokeServer(dynamicBlockPath, sVec, pCF)
             task.wait(0.
