@@ -62,12 +62,11 @@ end
 
 iR:GetPropertyChangedSignal("Text"):Connect(uP) iB:GetPropertyChangedSignal("Text"):Connect(uP) iY:GetPropertyChangedSignal("Text"):Connect(uP) iC:GetPropertyChangedSignal("Text"):Connect(parseColor)
 
--- Crash-Proofed Color Spectrum Mouse Sampling Math
 local sampling = false
 local function sampleColor()
     if not cW or not mP then return end
     local absPos, absSize = cW.AbsolutePosition, cW.AbsoluteSize
-    if not absPos or not absSize or not mP.X then return end -- Extra validation safety check
+    if not absPos or not absSize or not mP.X then return end
     
     local mouseX = math.clamp(mP.X - absPos.X, 0, absSize.X)
     local hue = mouseX / absSize.X
@@ -105,29 +104,50 @@ bD.MouseButton1Click:Connect(function()
     local ch = P.Character or P.CharacterAdded:Wait() local h = ch:WaitForChild("Humanoid")
     local f = workspace:WaitForChild("Blocks"):WaitForChild(P.Name) local gID = "R_" .. tostring(os.time())
     
+    -- Network Throttling Variable
+    local requestsSent = 0
+    
     for i = 1, nB do
         local a = (i / nB) * (2 * math.pi)
         local bP = cCF * CFrame.new(math.cos(a)*r, 0, math.sin(a)*r) * CFrame.Angles(0, -a, 0)
         
         -- 1. Build
         local t1 = P.Backpack:FindFirstChild("BuildingTool") or ch:FindFirstChild("BuildingTool")
-        if t1 then h:EquipTool(t1) t1:WaitForChild("RF"):InvokeServer("PlasticBlock", 8001, workspace:WaitForChild("WhiteZone"), CFrame.new(-10, 6.1, -20) * CFrame.Angles(0,-a,0), true, bP, false) end
-        
-        task.wait(0.04)
+        if t1 then 
+            h:EquipTool(t1) 
+            t1:WaitForChild("RF"):InvokeServer("PlasticBlock", 8001, workspace:WaitForChild("WhiteZone"), CFrame.new(-10, 6.1, -20) * CFrame.Angles(0,-a,0), true, bP, false) 
+            requestsSent = requestsSent + 1
+        end
+        task.wait(0.05)
         
         -- 2. Scale
         local pB = f:FindFirstChild("PlasticBlock") local t2 = P.Backpack:FindFirstChild("ScalingTool") or ch:FindFirstChild("ScalingTool")
-        if pB and t2 then h:EquipTool(t2) pB.Name = gID t2:WaitForChild("RF"):InvokeServer(pB, Vector3.new(sX, sY, sZ), bP) end
-        
-        task.wait(0.04)
+        if pB and t2 then 
+            h:EquipTool(t2) 
+            pB.Name = gID 
+            t2:WaitForChild("RF"):InvokeServer(pB, Vector3.new(sX, sY, sZ), bP) 
+            requestsSent = requestsSent + 1
+        end
+        task.wait(0.05)
         
         -- 3. Paint
-        if uC then local t3 = P.Backpack:FindFirstChild("PaintingTool") or ch:FindFirstChild("PaintingTool")
-            if pB and t3 then h:EquipTool(t3) t3:WaitForChild("RF"):InvokeServer({{{pB, cP.BackgroundColor3}}}) end
-            task.wait(0.04)
+        if uC then 
+            local t3 = P.Backpack:FindFirstChild("PaintingTool") or ch:FindFirstChild("PaintingTool")
+            if pB and t3 then 
+                h:EquipTool(t3) 
+                t3:WaitForChild("RF"):InvokeServer({{{pB, cP.BackgroundColor3}}}) 
+                requestsSent = requestsSent + 1
+            end
+            task.wait(0.05)
         end
         
         h:UnequipTools()
+        
+        -- SMART THROTTLE: Every 15 remote actions, pause for half a second to completely dump server rate-limit tracking
+        if requestsSent >= 15 then
+            task.wait(0.5)
+            requestsSent = 0
+        end
     end
     for _, b in ipairs(f:GetChildren()) do if b.Name == gID then b.Name = "PlasticBlock" end end
 end)
