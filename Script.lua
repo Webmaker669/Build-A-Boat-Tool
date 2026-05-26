@@ -1,27 +1,15 @@
-local Players = game:GetService("Players")
-local UserInputService = game:GetService("UserInputService")
-
-local Player = Players.LocalPlayer
-local Mouse = Player:GetMouse()
-local PlayerGui = Player:WaitForChild("PlayerGui")
-
-local cCF = nil
-local uC = true
-local showPrev = false
-local isMinimized = false
-
-local blocksFolder = workspace:WaitForChild("Blocks")
-local previewFolder = Instance.new("Folder", workspace)
-previewFolder.Name = "CircleHologram"
-
-if PlayerGui:FindFirstChild("StudioUI") then
-    PlayerGui.StudioUI:Destroy()
-end
-
+local P = game:GetService("Players").LocalPlayer
+local UIS = game:GetService("UserInputService")
+local M = P:GetMouse()
 local sG = Instance.new("ScreenGui")
 sG.Name = "StudioUI"
 sG.ResetOnSpawn = false
-sG.Parent = PlayerGui
+sG.Parent = P:WaitForChild("PlayerGui")
+
+local cCF, uC, sP, isMin = nil, true, false, false
+local blocksFolder = workspace:WaitForChild("Blocks")
+local pFld = Instance.new("Folder", workspace)
+pFld.Name = "CircleHologram"
 
 local m = Instance.new("Frame", sG)
 m.Size = UDim2.new(0, 340, 0, 320)
@@ -85,7 +73,7 @@ hb.InputChanged:Connect(function(i)
     end
 end)
 
-UserInputService.InputChanged:Connect(function(i)
+UIS.InputChanged:Connect(function(i)
     if i == dInp and drag then
         local d = i.Position - dStart
         local xO = sPos.X.Offset + d.X
@@ -112,9 +100,9 @@ local minBtn = cBtn("-", 260, 4, 24, 24, Color3.fromRGB(42, 42, 48), hb)
 local clsBtn = cBtn("X", 288, 4, 24, 24, Color3.fromRGB(150, 50, 50), hb)
 
 minBtn.MouseButton1Click:Connect(function()
-    isMinimized = not isMinimized
-    cf.Visible = not isMinimized
-    minBtn.Text = isMinimized and "+" or "-"
+    isMin = not isMin
+    cf.Visible = not isMin
+    minBtn.Text = isMin and "+" or "-"
 end)
 
 clsBtn.MouseButton1Click:Connect(function()
@@ -124,6 +112,7 @@ end)
 oB.MouseButton1Click:Connect(function()
     m.Visible, oB.Visible = true, false
 end)
+
 local cP = Instance.new("Frame", cf)
 cP.Size = UDim2.new(0, 40, 0, 40)
 cP.Position = UDim2.new(0, 280, 0, 12)
@@ -197,12 +186,12 @@ local function uP()
     local y = tonumber(iY.Text) or 2
     local sZ = ((2 * math.pi * r) / b) + 0.02
     aZ.Text = string.format("%.3f", sZ)
-    previewFolder:ClearAllChildren()
-    if cCF and showPrev then
+    pFld:ClearAllChildren()
+    if cCF and sP then
         local maxRender = math.min(b, 80)
         for i = 1, maxRender do
             local step = (i / maxRender) * (2 * math.pi)
-            local p = Instance.new("Part", previewFolder)
+            local p = Instance.new("Part", pFld)
             p.Size = Vector3.new(0.05, y, sZ * (b / maxRender))
             p.CFrame = cCF * CFrame.new(math.cos(step) * r, 0, math.sin(step) * r) * CFrame.Angles(0, -step, 0)
             p.Anchored = true
@@ -210,6 +199,7 @@ local function uP()
             p.Color = cP.BackgroundColor3
             p.Transparency = 0.5
             p.Material = Enum.Material.ForceField
+            p.Parent = pFld
         end
     end
 end
@@ -247,9 +237,9 @@ sC.MouseButton1Click:Connect(function()
     sC.Text = "CLICK PLOT PART..."
     sC.BackgroundColor3 = Color3.fromRGB(180, 50, 50)
     local conn
-    conn = Mouse.Button1Down:Connect(function()
-        if Mouse.Target then
-            cCF = Mouse.Target.CFrame
+    conn = M.Button1Down:Connect(function()
+        if M.Target then
+            cCF = M.Target.CFrame
             sC.Text = "CENTER SET"
             sC.BackgroundColor3 = Color3.fromRGB(0, 135, 85)
             conn:Disconnect()
@@ -263,18 +253,18 @@ pV.MouseButton1Click:Connect(function()
         pV.Text = "Select A Center Before Previewing"
         pV.BackgroundColor3 = Color3.fromRGB(180, 50, 50)
         task.delay(2, function()
-            if not showPrev then
+            if not sP then
                 pV.Text = "PREVIEW: OFF"
                 pV.BackgroundColor3 = Color3.fromRGB(58, 62, 68)
             end
         end)
         return
     end
-    showPrev = not showPrev
-    pV.Text = showPrev and "PREVIEW: ON" or "PREVIEW: OFF"
+    sP = not sP
+    pV.Text = sP and "PREVIEW: ON" or "PREVIEW: OFF"
     local c1 = Color3.fromRGB(0, 135, 85)
     local c2 = Color3.fromRGB(58, 62, 68)
-    pV.BackgroundColor3 = showPrev and c1 or c2
+    pV.BackgroundColor3 = sP and c1 or c2
     uP()
 end)
 
@@ -298,18 +288,17 @@ bD.MouseButton1Click:Connect(function()
         sC.BackgroundColor3 = Color3.fromRGB(180, 50, 50)
         return
     end
-    previewFolder:ClearAllChildren()
+    pFld:ClearAllChildren()
     local r = tonumber(iR.Text) or 30
     local nB = tonumber(iB.Text) or 120
     local sY = tonumber(iY.Text) or 2
     local sX = tonumber(aX.Text) or 0.05
     local sZ = tonumber(aZ.Text) or 0.5
-    local ch = Player.Character or Player.CharacterAdded:Wait()
+    local ch = P.Character or P.CharacterAdded:Wait()
     local h = ch:WaitForChild("Humanoid")
     local gID = "R_" .. tostring(os.time())
     local rS = 0
     
-    -- Global scanner to capture newly spawned instances anywhere in the folder tree
     local newlySpawnedBlock = nil
     local listener = blocksFolder.DescendantAdded:Connect(function(descendant)
         if descendant:IsA("Part") and descendant.Name == "PlasticBlock" then
@@ -319,60 +308,4 @@ bD.MouseButton1Click:Connect(function()
     
     for i = 1, nB do
         local a = (i / nB) * (2 * math.pi)
-        local cosA = math.cos(a) * r
-        local sinA = math.sin(a) * r
-        local bP = cCF * CFrame.new(cosA, 0, sinA) * CFrame.Angles(0, -a, 0)
-        
-        newlySpawnedBlock = nil
-        
-        local t1 = Player.Backpack:FindFirstChild("BuildingTool") or ch:FindFirstChild("BuildingTool")
-        if t1 then
-            h:EquipTool(t1)
-            local wZ = workspace:WaitForChild("WhiteZone")
-            local rot = CFrame.new(-10, 6.1, -20) * CFrame.Angles(0, -a, 0)
-            t1:WaitForChild("RF"):InvokeServer("PlasticBlock", 8001, wZ, rot, true, bP, false)
-            rS = rS + 1
-        end
-        
-        -- Active frame scanner loop (prevents script from hanging if server lags)
-        local scanTime = os.clock()
-        repeat task.wait() until newlySpawnedBlock or (os.clock() - scanTime > 0.5)
-        
-        if newlySpawnedBlock then
-            local targetBlock = newlySpawnedBlock
-            targetBlock.Name = gID
-            
-            local t2 = Player.Backpack:FindFirstChild("ScalingTool") or ch:FindFirstChild("ScalingTool")
-            if t2 then
-                h:EquipTool(t2)
-                t2:WaitForChild("RF"):InvokeServer(targetBlock, Vector3.new(sX, sY, sZ), bP)
-                rS = rS + 1
-            end
-            task.wait(0.04)
-            
-            if uC then
-                local t3 = Player.Backpack:FindFirstChild("PaintingTool") or ch:FindFirstChild("PaintingTool")
-                if t3 then
-                    h:EquipTool(t3)
-                    t3:WaitForChild("RF"):InvokeServer({{{targetBlock, cP.BackgroundColor3}}})
-                    rS = rS + 1
-                end
-                task.wait(0.04)
-            end
-        end
-        
-        h:UnequipTools()
-        if rS >= 15 then
-            task.wait(0.5)
-            rS = 0
-        end
-    end
-    
-    listener:Disconnect()
-    for _, b in ipairs(blocksFolder:GetDescendants()) do
-        if b.Name == gID then
-            b.Name = "PlasticBlock"
-        end
-    end
-end)
-uP()
+local cosA = math.cos(a) * rlocal sinA = math.sin(a) * rlocal bP = cCF * CFrame.new(cosA, 0, sinA) * CFrame.Angles(0, -a, 0)newlySpawnedBlock = nillocal t1 = P.Backpack:FindFirstChild("BuildingTool") or ch:FindFirstChild("BuildingTool")if t1 thenh:EquipTool(t1)local wZ = workspace:WaitForChild("WhiteZone")local rot = CFrame.new(-10, 6.1, -20) * CFrame.Angles(0, -a, 0)t1:WaitForChild("RF"):InvokeServer("PlasticBlock", 8001, wZ, rot, true, bP, false)rS = rS + 1endlocal scanTime = os.clock()repeat task.wait() until newlySpawnedBlock or (os.clock() - scanTime > 0.5)if newlySpawnedBlock thenlocal targetBlock = newlySpawnedBlocktargetBlock.Name = gIDlocal t2 = P.Backpack:FindFirstChild("ScalingTool") or ch:FindFirstChild("ScalingTool")if t2 thenh:EquipTool(t2)t2:WaitForChild("RF"):InvokeServer(targetBlock, Vector3.new(sX, sY, sZ), bP)rS = rS + 1endtask.wait(0.04)if uC thenlocal t3 = P.Backpack:FindFirstChild("PaintingTool") or ch:FindFirstChild("PaintingTool")if t3 thenh:EquipTool(t3)t3:WaitForChild("RF"):InvokeServer({{{targetBlock, cP.BackgroundColor3}}})rS = rS + 1endtask.wait(0.04)endendh:UnequipTools()if rS >= 15 thentask.wait(0.5)rS = 0endendlistener:Disconnect()for _, b in ipairs(blocksFolder:GetDescendants()) doif b.Name == gID thenb.Name = "PlasticBlock"endendend)uP()
