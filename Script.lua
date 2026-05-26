@@ -1,5 +1,5 @@
 -- =============================================================================
--- MATRIX CONFIGURATION: EXTRA INTERFACE EXTENSIONS & ITEM SELECTOR
+-- MATRIX CONFIGURATION: MATERIAL CHANGE SELECTION INTERFACE
 -- =============================================================================
 local Players = game:GetService("Players")
 local LocalPlayer = Players.LocalPlayer
@@ -29,39 +29,46 @@ local HelpPanel = uiData.HelpPanel
 local isSelecting = false
 local dataFolder = LocalPlayer:WaitForChild("Data")
 
--- Adapt UI dimensions side-by-side to accommodate materials menu gracefully
-MainFrame.Size = UDim2.new(0, 580, 0, 520)
+-- NEW: Main selection button placed directly inside your primary window grid layout
+local btnChangeBlock = Instance.new("TextButton", MainFrame)
+btnChangeBlock.Size = UDim2.new(1, -30, 0, 36)
+btnChangeBlock.Position = UDim2.new(0, 15, 0, 295) -- Fits cleanly under data fields
+btnChangeBlock.Text = "Change Block Material: PlasticBlock"
+btnChangeBlock.TextColor3 = Color3.fromRGB(255, 255, 255)
+btnChangeBlock.TextSize = 12
+btnChangeBlock.Font = Enum.Font.GothamBold
+btnChangeBlock.BackgroundColor3 = Color3.fromRGB(150, 40, 200)
+btnChangeBlock.BorderSizePixel = 0
+Instance.new("UICorner", btnChangeBlock).CornerRadius = UDim.new(0, 6)
 
-local InvPanel = Instance.new("Frame", MainFrame)
-InvPanel.Name = "DynamicInventoryContainer"
-InvPanel.Size = UDim2.new(0, 220, 1, -20)
-InvPanel.Position = UDim2.new(0, 345, 0, 10)
-InvPanel.BackgroundColor3 = Color3.fromRGB(34, 34, 38)
-InvPanel.BorderSizePixel = 0
-Instance.new("UICorner", InvPanel).CornerRadius = UDim.new(0, 10)
+-- Push down your original selection parts so they don't overlap the new block changer
+statusLabel.Position = UDim2.new(0, 15, 0, 335)
+btnSelect.Position = UDim2.new(0, 15, 0, 365)
+btnPreview.Position = UDim2.new(0, 15, 0, 406)
+btnBuild.Position = UDim2.new(0, 15, 0, 447)
 
-local InvTitle = Instance.new("TextLabel", InvPanel)
-InvTitle.Size = UDim2.new(1, 0, 0, 35)
-InvTitle.Text = "BUILD MATERIALS"
-InvTitle.TextColor3 = Color3.fromRGB(255, 255, 255)
-InvTitle.TextSize = 11
-InvTitle.Font = Enum.Font.GothamBold
-InvTitle.BackgroundColor3 = Color3.fromRGB(44, 44, 50)
-Instance.new("UICorner", InvTitle).CornerRadius = UDim.new(0, 10)
+-- The pop-out block panel window
+local BlockPanel = Instance.new("Frame", MainFrame)
+BlockPanel.Name = "BlockSelectionPanel"
+BlockPanel.Size = UDim2.new(0, 240, 1, 0)
+BlockPanel.Position = UDim2.new(1, 10, 0, 0)
+BlockPanel.BackgroundColor3 = Color3.fromRGB(34, 34, 38)
+BlockPanel.BorderSizePixel = 0
+BlockPanel.Visible = false
+Instance.new("UICorner", BlockPanel).CornerRadius = UDim.new(0, 10)
 
-local ToggleInvBtn = Instance.new("TextButton", MainFrame)
-ToggleInvBtn.Size = UDim2.new(0, 30, 0, 30)
-ToggleInvBtn.Position = UDim2.new(1, -110, 0, 7)
-ToggleInvBtn.Text = "📦"
-ToggleInvBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
-ToggleInvBtn.BackgroundColor3 = Color3.fromRGB(48, 48, 54)
-ToggleInvBtn.Font = Enum.Font.GothamBold
-ToggleInvBtn.TextSize = 14
-Instance.new("UICorner", ToggleInvBtn).CornerRadius = UDim.new(0, 6)
+local PanelTitle = Instance.new("TextLabel", BlockPanel)
+PanelTitle.Size = UDim2.new(1, 0, 0, 40)
+PanelTitle.Text = "SELECT OWNED BLOCK"
+PanelTitle.TextColor3 = Color3.fromRGB(255, 255, 255)
+PanelTitle.TextSize = 12
+PanelTitle.Font = Enum.Font.GothamBold
+PanelTitle.BackgroundColor3 = Color3.fromRGB(44, 44, 50)
+Instance.new("UICorner", PanelTitle).CornerRadius = UDim.new(0, 10)
 
-local ScrollingFrame = Instance.new("ScrollingFrame", InvPanel)
-ScrollingFrame.Size = UDim2.new(1, -10, 1, -85)
-ScrollingFrame.Position = UDim2.new(0, 5, 0, 45)
+local ScrollingFrame = Instance.new("ScrollingFrame", BlockPanel)
+ScrollingFrame.Size = UDim2.new(1, -20, 1, -60)
+ScrollingFrame.Position = UDim2.new(0, 10, 0, 50)
 ScrollingFrame.BackgroundTransparency = 1
 ScrollingFrame.BorderSizePixel = 0
 ScrollingFrame.ScrollBarThickness = 4
@@ -72,30 +79,16 @@ local UIListLayout = Instance.new("UIListLayout", ScrollingFrame)
 UIListLayout.Padding = UDim.new(0, 4)
 UIListLayout.SortOrder = Enum.SortOrder.Name
 
-local SelectedMaterialLabel = Instance.new("TextLabel", InvPanel)
-SelectedMaterialLabel.Size = UDim2.new(1, -10, 0, 25)
-SelectedMaterialLabel.Position = UDim2.new(0, 5, 1, -30)
-SelectedMaterialLabel.Text = "Selected Material: None"
-SelectedMaterialLabel.TextColor3 = Color3.fromRGB(255, 200, 50)
-SelectedMaterialLabel.TextSize = 11
-SelectedMaterialLabel.Font = Enum.Font.GothamSemibold
-SelectedMaterialLabel.BackgroundTransparency = 1
-SelectedMaterialLabel.TextXAlignment = Enum.TextXAlignment.Left
-
-_G.SelectedBuildMaterialToken = nil
+-- Default configuration token fallback variable
+_G.SelectedBuildMaterialToken = "PlasticBlock"
 
 -- =============================================================================
--- INTERFACE REFRACTION: DYNAMIC REFRESH CYCLES & TOGGLES
+-- INTERFACE REFRACTION: POPUP CONTROLLER & INVENTORY MAPPING
 -- =============================================================================
-ToggleInvBtn.MouseButton1Click:Connect(function()
-	InvPanel.Visible = not InvPanel.Visible
-	if InvPanel.Visible then
-		MainFrame.Size = UDim2.new(0, 580, 0, 520)
-		ToggleInvBtn.BackgroundColor3 = Color3.fromRGB(48, 48, 54)
-	else
-		MainFrame.Size = UDim2.new(0, 330, 0, 520)
-		ToggleInvBtn.BackgroundColor3 = Color3.fromRGB(240, 173, 78)
-	end
+btnChangeBlock.MouseButton1Click:Connect(function()
+	ColorPanel.Visible = false
+	HelpPanel.Visible = false
+	BlockPanel.Visible = not BlockPanel.Visible
 end)
 
 local function updateInventoryLayout()
@@ -112,10 +105,10 @@ local function updateInventoryLayout()
 			end
 			
 			local itemBtn = Instance.new("TextButton", ScrollingFrame)
-			itemBtn.Size = UDim2.new(1, -5, 0, 28)
+			itemBtn.Size = UDim2.new(1, -5, 0, 30)
 			itemBtn.Text = "  " .. item.Name .. " (" .. tostring(item.Value) .. ")"
 			itemBtn.TextColor3 = (_G.SelectedBuildMaterialToken == item.Name) and Color3.fromRGB(255, 255, 255) or Color3.fromRGB(190, 190, 195)
-			itemBtn.BackgroundColor3 = (_G.SelectedBuildMaterialToken == item.Name) and Color3.fromRGB(0, 122, 215) or Color3.fromRGB(44, 44, 50)
+			itemBtn.BackgroundColor3 = (_G.SelectedBuildMaterialToken == item.Name) and Color3.fromRGB(150, 40, 200) or Color3.fromRGB(44, 44, 50)
 			itemBtn.Font = Enum.Font.GothamSemibold
 			itemBtn.TextSize = 11
 			itemBtn.TextXAlignment = Enum.TextXAlignment.Left
@@ -124,7 +117,8 @@ local function updateInventoryLayout()
 			
 			itemBtn.MouseButton1Click:Connect(function()
 				_G.SelectedBuildMaterialToken = item.Name
-				SelectedMaterialLabel.Text = "Selected: " .. item.Name
+				btnChangeBlock.Text = "Material: " .. item.Name
+				BlockPanel.Visible = false -- Closes list menu window on block chosen selection
 				updateInventoryLayout()
 			end)
 		end
@@ -137,8 +131,8 @@ for _, item in ipairs(dataFolder:GetChildren()) do
 	if item:IsA("ValueBase") then
 		item.Changed:Connect(function()
 			if _G.SelectedBuildMaterialToken == item.Name and item.Value <= 0 then
-				_G.SelectedBuildMaterialToken = nil
-				SelectedMaterialLabel.Text = "Selected Material: None"
+				_G.SelectedBuildMaterialToken = "PlasticBlock"
+				btnChangeBlock.Text = "Change Block Material: PlasticBlock"
 			end
 			updateInventoryLayout()
 		end)
@@ -188,17 +182,6 @@ btnBuild.MouseButton1Click:Connect(function()
 		statusLabel.Text, statusLabel.TextColor3 = "Error: Select Center Target First!", Color3.fromRGB(255, 80, 80)
 		return 
 	end
-	
-	if not _G.SelectedBuildMaterialToken then
-		statusLabel.Text, statusLabel.TextColor3 = "Error: Choose a Build Material Item!", Color3.fromRGB(255, 80, 80)
-		return
-	end
-	
-	local materialCheck = dataFolder:FindFirstChild(_G.SelectedBuildMaterialToken)
-	if not materialCheck or materialCheck.Value <= 0 then
-		statusLabel.Text, statusLabel.TextColor3 = "Error: Material completely empty!", Color3.fromRGB(255, 80, 80)
-		return
-	end
 
 	local radius = tonumber(inputRadius.Text) or 20
 	local steps = tonumber(inputSteps.Text) or 30
@@ -223,23 +206,19 @@ btnBuild.MouseButton1Click:Connect(function()
 	previewFolder:ClearAllChildren()
 	ColorPanel.Visible = false
 	HelpPanel.Visible = false
+	BlockPanel.Visible = false
 	
 	btnBuild.Text, btnBuild.Active = "Constructing Active Sector Matrix...", false
 	local folder = workspace:WaitForChild("Blocks", 5):WaitForChild(LocalPlayer.Name, 5)
 	
 	for i = 1, steps do
-		if materialCheck.Value <= 0 then
-			statusLabel.Text, statusLabel.TextColor3 = "Interrupted: Ran out of materials!", Color3.fromRGB(255, 80, 80)
-			break
-		end
-
 		local angle = (i / steps) * math.pi * 2
 		local targetPlacementPos = Vector3.new(selectedCenterPos.X + math.cos(angle) * radius, selectedCenterPos.Y, selectedCenterPos.Z + math.sin(angle) * radius)
 		
 		local pCF, hCF = CFrame.lookAt(targetPlacementPos, selectedCenterPos), CFrame.new(targetPlacementPos) * CFrame.Angles(0, angle, 0)
 		local initialChildren = folder:GetChildren()
 		
-		-- PASSES DYNAMIC TOKEN DIRECTLY TO SERVER REMOTE
+		-- PASSES CHOSEN TOKEN SPECIFIED BY THE DATA SELECTION POPUP MENU DIRECTLY
 		bRF:InvokeServer(_G.SelectedBuildMaterialToken, 8001, Instance.new("Part", nil), pCF, true, hCF, false)
 		
 		local dynamicBlockPath, retries = nil, 0
