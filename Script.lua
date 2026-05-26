@@ -606,7 +606,6 @@ btnBuild.MouseButton1Click:Connect(function()
         end
         
         if dynamicBlockPath then
-            -- FIX: Changed to clean Vector3 construction to fix execution errors on basic environments
+            -- FIX: Removed the broken math library 'vector.create' call that caused the script console crash
             local sVec = Vector3.new(sizeX, sizeY, sizeZ)
-            sRF:InvokeServer(dynamicBlockPath, sVec, pCF)
-            task.wait(0.
+            sRF:InvokeServer(dynamicBlockPath
