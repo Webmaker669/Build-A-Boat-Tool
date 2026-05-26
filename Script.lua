@@ -1,1 +1,337 @@
-local P,cCF,mP=game:GetService("Players").LocalPlayer,nil,game:GetService("Players").LocalPlayer:GetMouse()local sG=Instance.new("ScreenGui",P:WaitForChild("PlayerGui"))sG.Name,sG.ResetOnSpawn="StudioUI",false local m=Instance.new("Frame",sG)m.Size,m.Position,m.BackgroundColor3,m.Active,m.Draggable,m.BorderSizePixel=UDim2.new(0,340,0,460),UDim2.new(0.05,0,0.2,0),Color3.fromRGB(30,30,35),true,true,0 Instance.new("UICorner",m).CornerRadius=UDim.new(0,10)local hb=Instance.new("Frame",m)hb.Size,hb.Position,hb.BackgroundColor3,hb.BorderSizePixel=UDim2.new(1,0,0,38),UDim2.new(0,0,0,0),Color3.fromRGB(24,24,28),0 Instance.new("UICorner",hb).CornerRadius=UDim.new(0,10)local t=Instance.new("TextLabel",hb)t.Size,t.Text,t.TextColor3,t.TextSize,t.Font,t.TextXAlignment,t.BackgroundTransparency=UDim2.new(1,-80,1,0)," Seamless Circle Studio",Color3.fromRGB(240,240,245),14,4,0,1 local minBtn=Instance.new("TextButton",hb)minBtn.Size,minBtn.Position,minBtn.BackgroundColor3,minBtn.Text,minBtn.TextColor3,minBtn.Font,minBtn.TextSize,minBtn.BorderSizePixel=UDim2.new(0,26,0,26),UDim2.new(1,-62,0,6),Color3.fromRGB(42,42,48),"-",Color3.new(1,1,1),4,18,0 Instance.new("UICorner",minBtn).CornerRadius=UDim.new(0,6)local clsBtn=Instance.new("TextButton",hb)clsBtn.Size,clsBtn.Position,clsBtn.BackgroundColor3,clsBtn.Text,clsBtn.TextColor3,clsBtn.Font,clsBtn.TextSize,clsBtn.BorderSizePixel=UDim2.new(0,26,0,26),UDim2.new(1,-32,0,6),Color3.fromRGB(150,50,50),"X",Color3.new(1,1,1),4,14,0 Instance.new("UICorner",clsBtn).CornerRadius=UDim.new(0,6)local oB=Instance.new("TextButton",sG)oB.Size,oB.Position,oB.BackgroundColor3,oB.Text,oB.TextColor3,oB.Font,oB.TextSize,oB.Visible=UDim2.new(0,90,0,32),UDim2.new(0,0,0.5,-16),Color3.fromRGB(30,30,35),"Open Studio",Color3.new(1,1,1),4,13,false Instance.new("UICorner",oB).CornerRadius=UDim.new(0,6)local cf=Instance.new("Frame",m)cf.Size,cf.Position,cf.BackgroundColor3,cf.BorderSizePixel=UDim2.new(1,0,0,422),UDim2.new(0,0,0,38),Color3.fromRGB(30,30,35),0 Instance.new("UICorner",cf).CornerRadius=UDim.new(0,10)local isMinimized=false minBtn.MouseButton1Click:Connect(function()isMinimized=not isMinimized cf.Visible,minBtn.Text=not isMinimized,isMinimized and"+"or"-"end)clsBtn.MouseButton1Click:Connect(function()m.Visible,oB.Visible=false,true end)oB.MouseButton1Click:Connect(function()m.Visible,oB.Visible=true,false end)local cP=Instance.new("Frame",cf)cP.Size,cP.Position,cP.BackgroundColor3,cP.BorderSizePixel=UDim2.new(0,42,0,42),UDim2.new(0,278,0,14),Color3.new(1,1,1),0 Instance.new("UICorner",cP).CornerRadius=UDim.new(0,8)local pF=Instance.new("Frame",cf)pF.Size,pF.Position,pF.BackgroundTransparency=UDim2.new(0,250,0,42),UDim2.new(0,20,0,14),1 local uG=Instance.new("UIGridLayout",pF)uG.CellSize,uG.CellPadding=UDim2.new(0,23,0,20),UDim2.new(0,2,0,2)local robloxColors={Color3.fromRGB(255,0,0),Color3.fromRGB(0,255,0),Color3.fromRGB(0,0,255),Color3.fromRGB(255,255,0),Color3.fromRGB(255,0,255),Color3.fromRGB(0,255,255),Color3.fromRGB(255,255,255),Color3.fromRGB(163,162,165),Color3.fromRGB(0,0,0),Color3.fromRGB(255,170,0),Color3.fromRGB(170,85,0),Color3.fromRGB(0,85,0),Color3.fromRGB(85,0,127),Color3.fromRGB(170,0,0),Color3.fromRGB(85,170,255),Color3.fromRGB(255,170,255),Color3.fromRGB(100,20,20),Color3.fromRGB(20,100,20),Color3.fromRGB(20,20,100),Color3.fromRGB(245,205,48)}local function cI(n,p,x,y,r)local l=Instance.new("TextLabel",cf)l.Size,l.Position,l.Text,l.TextColor3,l.TextSize,l.Font,l.TextXAlignment,l.BackgroundTransparency=UDim2.new(0,65,0,24),UDim2.new(0,x,0,y),n,Color3.fromRGB(180,180,185),13,3,0,1 local b=Instance.new("TextBox",cf)b.Size,b.Position,b.BackgroundColor3,b.TextColor3,b.BorderSizePixel,b.Text,b.ClearTextOnFocus,b.Font,b.TextSize,b.TextEditable=UDim2.new(0,80,0,24),UDim2.new(0,x+65,0,y),r and Color3.fromRGB(36,36,40) or Color3.fromRGB(44,44,50),r and Color3.fromRGB(140,140,145) or Color3.new(1,1,1),0,p,false,3,13,not r Instance.new("UICorner",b).CornerRadius=UDim.new(0,5)return b end local iR,iB,aX,iY,aZ,iC=cI("Radius:","30",20,77),cI("Blocks:","120",170,77),cI("Thick (X):","0.05",20,110,true),cI("Height (Y):","2.0",170,110),cI("Length (Z):","Calculated",20,143,true),cI("RGB Val:","1,1,1",170,143)local function cB(n,x,y,w,h,c)local btn=Instance.new("TextButton",cf)btn.Size,btn.Position,btn.BackgroundColor3,btn.Text,btn.TextColor3,btn.Font,btn.TextSize,btn.BorderSizePixel=UDim2.new(0,w,0,h),UDim2.new(0,x,0,y),c,n,Color3.new(1,1,1),4,13,0 Instance.new("UICorner",btn).CornerRadius=UDim.new(0,6)return btn end local sC,pV,tB,bD=cB("SELECT CENTER",20,182,145,32,Color3.fromRGB(130,85,180)),cB("PREVIEW: OFF",175,182,145,32,Color3.fromRGB(58,62,68)),cB("PAINTING: ON",20,222,300,32,Color3.fromRGB(0,110,185)),cB("BUILD SEAMLESS CIRCLE",20,267,300,40,Color3.fromRGB(0,135,85))local uC,showPrev=true,false local previewFolder=Instance.new("Folder",workspace)previewFolder.Name="CircleHologram"local function clearHologram()previewFolder:ClearAllChildren()end local function uP()local r,b,y=tonumber(iR.Text)or 30,tonumber(iB.Text)or 120,tonumber(iY.Text)or 2 local sX,sZ=0.05,((2*math.pi*r)/b)+0.02 aZ.Text=string.format("%.3f",sZ)clearHologram()if cCF and showPrev then for i=1,math.min(b,80)do local step=(i/math.min(b,80))*(2*math.pi)local bP=cCF*CFrame.new(math.cos(step)*r,0,math.sin(step)*r)*CFrame.Angles(0,-step,0)local p=Instance.new("Part",previewFolder)p.Size,p.CFrame,p.Anchored,p.CanCollide,p.Color,p.Transparency,p.Material=Vector3.new(sX,y,sZ*(b/math.min(b,80))),bP,true,false,cP.BackgroundColor3,0.5,Enum.Material.ForceField end end end for _,color in ipairs(robloxColors)do local sw=Instance.new("TextButton",pF)sw.BackgroundColor3,sw.Text,sw.BorderSizePixel=color,"",0 Instance.new("UICorner",sw).CornerRadius=UDim.new(0,4)sw.MouseButton1Click:Connect(function()cP.BackgroundColor3,iC.Text=color,string.format("%.2f, %.2f, %.2f",color.R,color.G,color.B)uP()end)end iR:GetPropertyChangedSignal("Text"):Connect(uP)iB:GetPropertyChangedSignal("Text"):Connect(uP)iY:GetPropertyChangedSignal("Text"):Connect(uP)iC:GetPropertyChangedSignal("Text"):Connect(function()local rS,gS,bS=iC.Text:match("([^,]+),([^,]+),([^,]+)")if rS and gS and bS then cP.BackgroundColor3=Color3.new(tonumber(rS)or 1,tonumber(gS)or 1,tonumber(bS)or 1)uP()end end)sC.MouseButton1Click:Connect(function()sC.Text,sC.BackgroundColor3="CLICK PLOT PART...",Color3.fromRGB(180,50,50)local conn;conn=mP.Button1Down:Connect(function()if mP.Target then cCF=mP.Target.CFrame sC.Text,sC.BackgroundColor3="CENTER SET",Color3.fromRGB(0,135,85)conn:Disconnect()uP()end end)end)pV.MouseButton1Click:Connect(function()if not cCF then pV.Text,pV.BackgroundColor3="Select A Center Before Previewing",Color3.fromRGB(180,50,50)task.delay(2,function()if not showPrev then pV.Text,pV.BackgroundColor3="PREVIEW: OFF",Color3.fromRGB(58,62,68)end end)return end showPrev=not showPrev pV.Text,pV.BackgroundColor3=showPrev and"PREVIEW: ON"or"PREVIEW: OFF",showPrev and Color3.fromRGB(0,135,85) or Color3.fromRGB(58,62,68) uP()end)tB.MouseButton1Click:Connect(function()uC=not uC tB.Text,tB.BackgroundColor3=uC and"PAINTING: ON"or"PAINTING: OFF",uC and Color3.fromRGB(0,110,185) or Color3.fromRGB(85,88,94) iC.TextEditable,iC.BackgroundColor3=uC,uC and Color3.fromRGB(44,44,50) or Color3.fromRGB(36,36,40)if not uC then cP.BackgroundColor3=Color3.fromRGB(163,162,165) end uP()end)bD.MouseButton1Click:Connect(function()if not cCF then sC.Text,sC.BackgroundColor3="SET CENTER FIRST!",Color3.fromRGB(180,50,50)return end clearHologram()local radius,numberOfBlocks,sizeY=tonumber(iR.Text)or 30,tonumber(iB.Text)or 120,tonumber(iY.Text)or 2 local sizeX,sizeZ=tonumber(aX.Text)or 0.05,tonumber(aZ.Text)or 0.5 local backpack,character=P:WaitForChild("Backpack"),P.Character or P.CharacterAdded:Wait()local humanoid,rootPart=character:WaitForChild("Humanoid"),character:WaitForChild("HumanoidRootPart")local blocksFolder=workspace:WaitForChild("Blocks"):WaitForChild(P.Name)local targetSize=Vector3.new(sizeX,sizeY,sizeZ)local detectedZoneName,shortestDistance="WhiteZone",math.huge local zoneNames={"WhiteZone","BlackZone","MagentaZone","BlueZone","GreenZone","YellowZone","RedZone"}for _,zName in ipairs(zoneNames)do local zFolder=workspace:FindFirstChild(zName)local part=zFolder and(zFolder:FindFirstChildWhichIsA("BasePart")or zFolder)if part then local dist=(rootPart.Position-part.Position).Magnitude if dist<shortestDistance then shortestDistance,detectedZoneName=dist,zName end end end for i=1,numberOfBlocks do local angle=(i/numberOfBlocks)*(2*math.pi)local blockPos=cCF*CFrame.new(math.cos(angle)*radius,0,math.sin(angle)*radius)*CFrame.Angles(0,-angle,0)local bTool=backpack:FindFirstChild("BuildingTool")or character:FindFirstChild("BuildingTool")if bTool then humanoid:EquipTool(bTool)task.wait(0.06)bTool:WaitForChild("RF"):InvokeServer("PlasticBlock",8001,workspace:WaitForChild(detectedZoneName),CFrame.new(-10,6.1,-20)*CFrame.Angles(0,-angle,0),true,blockPos,false)end task.wait(0.06)local placed=blocksFolder:FindFirstChild("PlasticBlock")local sTool=backpack:FindFirstChild("ScalingTool")or character:FindFirstChild("ScalingTool")if placed and sTool then humanoid:EquipTool(sTool)task.wait(0.06)placed.Name="ProcessedBlock"sTool:WaitForChild("RF"):InvokeServer(placed,targetSize,blockPos)end task.wait(0.06)if uC and placed then local pTool=backpack:FindFirstChild("PaintingTool")or character:FindFirstChild("PaintingTool")if pTool then humanoid:EquipTool(pTool)task.wait(0.06)pTool:WaitForChild("RF"):InvokeServer({{{placed,cP.BackgroundColor3}}})end end humanoid:UnequipTools()task.wait(0.06)end for _,b in ipairs(blocksFolder:GetChildren())do if b.Name=="ProcessedBlock"then b.Name="PlasticBlock"end end end)uP()
+-- UI & Visual Subsystem Initialization
+local CoreGui = game:GetService("CoreGui")
+local Players = game:GetService("Players")
+local LocalPlayer = Players.LocalPlayer
+local Mouse = LocalPlayer:GetMouse()
+local RunService = game:GetService("RunService")
+
+-- Clear previous suite instances safely
+if CoreGui:FindFirstChild("CircleBuilderUI") then CoreGui.CircleBuilderUI:Destroy() end
+if CoreGui:FindFirstChild("CirclePreviewFolder") then CoreGui.CirclePreviewFolder:Destroy() end
+
+-- Screen Container
+local ScreenGui = Instance.new("ScreenGui", CoreGui)
+ScreenGui.Name = "CircleBuilderUI"
+ScreenGui.ResetOnSpawn = false
+
+local MainFrame = Instance.new("Frame", ScreenGui)
+MainFrame.Size = UDim2.new(0, 330, 0, 520)
+MainFrame.Position = UDim2.new(0.05, 0, 0.15, 0)
+MainFrame.BackgroundColor3 = Color3.fromRGB(28, 28, 32)
+MainFrame.BorderSizePixel = 0
+MainFrame.Active = true
+MainFrame.Draggable = true
+
+Instance.new("UICorner", MainFrame).CornerRadius = UDim.new(0, 12)
+
+-- Header Styling
+local Title = Instance.new("TextLabel", MainFrame)
+Title.Size = UDim2.new(1, 0, 0, 45)
+Title.Text = "⭕ CIRCLE ENGINE PRO"
+Title.TextColor3 = Color3.fromRGB(255, 255, 255)
+Title.TextSize = 15
+Title.Font = Enum.Font.GothamBold
+Title.BackgroundColor3 = Color3.fromRGB(38, 38, 44)
+Instance.new("UICorner", Title).CornerRadius = UDim.new(0, 12)
+
+-- Workspace Active Visual Elements Instantiations
+local previewFolder = Instance.new("Folder", CoreGui)
+previewFolder.Name = "CirclePreviewFolder"
+
+local selectionBox = Instance.new("SelectionBox", CoreGui)
+selectionBox.Color3 = Color3.fromRGB(0, 255, 255)
+selectionBox.LineThickness = 0.04
+
+-- Memory Storage Pointer Structs
+local selectedCenterPos = nil
+local blockName = "PlasticBlock"
+local isSelecting = false
+local currentColor = Color3.new(1, 1, 1)
+local useAutoSmooth = true
+
+-- Pre-compiled Color Matrices Array
+local colorPalette = {
+    Color3.fromRGB(255, 255, 255), Color3.fromRGB(255, 50, 50), 
+    Color3.fromRGB(50, 255, 50), Color3.fromRGB(50, 100, 255), 
+    Color3.fromRGB(255, 255, 50), Color3.fromRGB(255, 50, 255),
+    Color3.fromRGB(50, 255, 255), Color3.fromRGB(255, 128, 0)
+}
+local currentColorIndex = 1
+
+-- Input Generation Helper Pipeline
+local function createInputField(labelText, yPos, defaultValue)
+    local label = Instance.new("TextLabel", MainFrame)
+    label.Size = UDim2.new(0, 140, 0, 28)
+    label.Position = UDim2.new(0, 15, 0, yPos)
+    label.Text = labelText
+    label.TextColor3 = Color3.fromRGB(190, 190, 195)
+    label.TextSize = 13
+    label.TextXAlignment = Enum.TextXAlignment.Left
+    label.BackgroundTransparency = 1
+    label.Font = Enum.Font.Gotham
+
+    local box = Instance.new("TextBox", MainFrame)
+    box.Size = UDim2.new(0, 140, 0, 28)
+    box.Position = UDim2.new(0, 165, 0, yPos)
+    box.Text = defaultValue
+    box.TextColor3 = Color3.fromRGB(255, 255, 255)
+    box.BackgroundColor3 = Color3.fromRGB(44, 44, 50)
+    box.BorderSizePixel = 0
+    box.Font = Enum.Font.GothamSemibold
+    box.TextSize = 13
+    Instance.new("UICorner", box).CornerRadius = UDim.new(0, 5)
+    
+    return box
+end
+
+local inputRadius = createInputField("Circle Radius:", 60, "20")
+local inputSizeX  = createInputField("Block Width (X):", 100, "2")
+local inputSizeY  = createInputField("Block Height (Y):", 140, "2")
+local inputSizeZ  = createInputField("Block Depth (Z):", 180, "4")
+
+-- Auto Smooth Toggle Configurations
+local smoothLabel = Instance.new("TextLabel", MainFrame)
+smoothLabel.Size = UDim2.new(0, 180, 0, 30)
+smoothLabel.Position = UDim2.new(0, 15, 0, 220)
+smoothLabel.Text = "Auto-Smooth Width (X):"
+smoothLabel.TextColor3 = Color3.fromRGB(190, 190, 195)
+smoothLabel.TextSize = 13
+smoothLabel.TextXAlignment = Enum.TextXAlignment.Left
+smoothLabel.BackgroundTransparency = 1
+smoothLabel.Font = Enum.Font.Gotham
+
+local btnSmoothToggle = Instance.new("TextButton", MainFrame)
+btnSmoothToggle.Size = UDim2.new(0, 100, 0, 26)
+btnSmoothToggle.Position = UDim2.new(0, 205, 0, 222)
+btnSmoothToggle.Text = "ENABLED"
+btnSmoothToggle.Font = Enum.Font.GothamBold
+btnSmoothToggle.TextSize = 11
+btnSmoothToggle.BackgroundColor3 = Color3.fromRGB(46, 139, 87)
+btnSmoothToggle.TextColor3 = Color3.new(1, 1, 1)
+Instance.new("UICorner", btnSmoothToggle).CornerRadius = UDim.new(0, 5)
+
+btnSmoothToggle.MouseButton1Click:Connect(function()
+    useAutoSmooth = not useAutoSmooth
+    if useAutoSmooth then
+        btnSmoothToggle.Text = "ENABLED"
+        btnSmoothToggle.BackgroundColor3 = Color3.fromRGB(46, 139, 87)
+        inputSizeX.TextEditable = false
+        inputSizeX.TextColor3 = Color3.fromRGB(100, 100, 100)
+    else
+        btnSmoothToggle.Text = "DISABLED"
+        btnSmoothToggle.BackgroundColor3 = Color3.fromRGB(150, 50, 50)
+        inputSizeX.TextEditable = true
+        inputSizeX.TextColor3 = Color3.fromRGB(255, 255, 255)
+    end
+end)
+inputSizeX.TextEditable = false
+inputSizeX.TextColor3 = Color3.fromRGB(100, 100, 100)
+
+-- Interactive Color Picker Setup Interface
+local colorLabel = Instance.new("TextLabel", MainFrame)
+colorLabel.Size = UDim2.new(0, 140, 0, 30)
+colorLabel.Position = UDim2.new(0, 15, 0, 260)
+colorLabel.Text = "Active Build Color:"
+colorLabel.TextColor3 = Color3.fromRGB(190, 190, 195)
+colorLabel.TextSize = 13
+colorLabel.TextXAlignment = Enum.TextXAlignment.Left
+colorLabel.BackgroundTransparency = 1
+colorLabel.Font = Enum.Font.Gotham
+
+local btnColorPicker = Instance.new("TextButton", MainFrame)
+btnColorPicker.Size = UDim2.new(0, 140, 0, 28)
+btnColorPicker.Position = UDim2.new(0, 165, 0, 260)
+btnColorPicker.Text = "◽ Pure White"
+btnColorPicker.Font = Enum.Font.GothamBold
+btnColorPicker.TextSize = 12
+btnColorPicker.BackgroundColor3 = currentColor
+btnColorPicker.TextColor3 = Color3.new(0, 0, 0)
+Instance.new("UICorner", btnColorPicker).CornerRadius = UDim.new(0, 5)
+
+btnColorPicker.MouseButton1Click:Connect(function()
+    currentColorIndex = (currentColorIndex % #colorPalette) + 1
+    currentColor = colorPalette[currentColorIndex]
+    btnColorPicker.BackgroundColor3 = currentColor
+    if currentColor.R + currentColor.G + currentColor.B < 1.5 then
+        btnColorPicker.TextColor3 = Color3.new(1, 1, 1)
+    else
+        btnColorPicker.TextColor3 = Color3.new(0, 0, 0)
+    end
+    btnColorPicker.Text = "Color Chosen"
+end)
+
+-- Status Updates Output Container
+local statusLabel = Instance.new("TextLabel", MainFrame)
+statusLabel.Size = UDim2.new(1, -30, 0, 30)
+statusLabel.Position = UDim2.new(0, 15, 0, 305)
+statusLabel.Text = "Center Position Status: NOT SET"
+statusLabel.TextColor3 = Color3.fromRGB(240, 90, 90)
+statusLabel.TextSize = 12
+statusLabel.Font = Enum.Font.GothamSemibold
+statusLabel.BackgroundTransparency = 1
+
+local function createButton(text, yPos, color)
+    local btn = Instance.new("TextButton", MainFrame)
+    btn.Size = UDim2.new(1, -30, 0, 42)
+    btn.Position = UDim2.new(0, 15, 0, yPos)
+    btn.Text = text
+    btn.TextColor3 = Color3.fromRGB(255, 255, 255)
+    btn.TextSize = 13
+    btn.Font = Enum.Font.GothamBold
+    btn.BackgroundColor3 = color
+    btn.BorderSizePixel = 0
+    Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 8)
+    return btn
+end
+
+local btnSelect = createButton("🎯 CHOOSE CENTER PIECE", 345, Color3.fromRGB(0, 122, 215))
+local btnBuild  = createButton("🚀 COMMENCE RING GENERATION", 400, Color3.fromRGB(46, 139, 87))
+
+-- Render Loop Processing Engine for 3D Realtime Previews
+local function updateRealtimeVisualizerRing()
+    previewFolder:ClearAllChildren()
+    if not selectedCenterPos then return end
+    
+    local radius = tonumber(inputRadius.Text) or 20
+    local sizeX  = tonumber(inputSizeX.Text) or 2
+    local sizeY  = tonumber(inputSizeY.Text) or 2
+    local sizeZ  = tonumber(inputSizeZ.Text) or 4
+    
+    local circumference = 2 * math.pi * radius
+    local steps = math.floor(circumference / sizeZ)
+    if useAutoSmooth then sizeX = circumference / steps end
+    
+    for i = 1, steps do
+        local angle = (i / steps) * math.pi * 2
+        local xOffset = math.cos(angle) * radius
+        local zOffset = math.sin(angle) * radius
+        
+        local targetPlacementPos = Vector3.new(selectedCenterPos.X + xOffset, selectedCenterPos.Y, selectedCenterPos.Z + zOffset)
+        
+        local pPart = Instance.new("Part")
+        pPart.Size = Vector3.new(sizeX, sizeY, sizeZ)
+        pPart.CFrame = CFrame.lookAt(targetPlacementPos, selectedCenterPos)
+        pPart.Color = currentColor
+        pPart.Transparency = 0.55
+        pPart.Anchored = true
+        pPart.CanCollide = false
+        pPart.Material = Enum.Material.Neon
+        pPart.Parent = previewFolder
+    end
+end
+
+for _, box in ipairs({inputRadius, inputSizeX, inputSizeY, inputSizeZ}) do
+    box:GetPropertyChangedSignal("Text"):Connect(updateRealtimeVisualizerRing)
+end
+btnColorPicker:GetPropertyChangedSignal("BackgroundColor3"):Connect(updateRealtimeVisualizerRing)
+
+-- Raycasting Mouse Selection Processing Logic
+local renderConnection, clickConnection
+btnSelect.MouseButton1Click:Connect(function()
+    if isSelecting then return end
+    isSelecting = true
+    statusLabel.Text = "Hover over map and select target node..."
+    statusLabel.TextColor3 = Color3.fromRGB(240, 180, 20)
+    btnSelect.Text = "SYSTEM SELECTING TRACKS..."
+    
+    renderConnection = RunService.RenderStepped:Connect(function()
+        local target = Mouse.Target
+        if target and target:IsA("BasePart") then selectionBox.Adornee = target else selectionBox.Adornee = nil end
+    end)
+    
+    clickConnection = Mouse.Button1Down:Connect(function()
+        local target = Mouse.Target
+        if target and target:IsA("BasePart") then
+            selectedCenterPos = target.Position
+            statusLabel.Text = "Anchor Node Linked: " .. target.Name
+            statusLabel.TextColor3 = Color3.fromRGB(80, 240, 80)
+            
+            renderConnection:Disconnect()
+            clickConnection:Disconnect()
+            selectionBox.Adornee = nil
+            isSelecting = false
+            btnSelect.Text = "🎯 CHOOSE CENTER PIECE"
+            updateRealtimeVisualizerRing()
+        end
+    end)
+end)
+
+-- Main Remote Network Placement Pipeline
+btnBuild.MouseButton1Click:Connect(function()
+    if isSelecting or not selectedCenterPos then return end
+    
+    local radius = tonumber(inputRadius.Text) or 20
+    local manualX = tonumber(inputSizeX.Text) or 2
+    local sizeY  = tonumber(inputSizeY.Text) or 2
+    local sizeZ  = tonumber(inputSizeZ.Text) or 4
+    
+    local circumference = 2 * math.pi * radius
+    local steps = math.floor(circumference / sizeZ)
+    local sizeX = useAutoSmooth and (circumference / steps) or manualX
+    
+    local function findRemote(toolName)
+        local tool = LocalPlayer.Backpack:FindFirstChild(toolName) or (LocalPlayer.Character and LocalPlayer.Character:FindFirstChild(toolName))
+        return tool and tool:FindFirstChild("RF")
+    end
+    
+    local buildingRF = findRemote("BuildingTool")
+    local scalingRF  = findRemote("ScalingTool")
+    local paintingRF = findRemote("PaintingTool")
+    
+    if not buildingRF or not scalingRF or not paintingRF then
+        statusLabel.Text = "Hardware Fault: Missing active toolbar utilities!"
+        statusLabel.TextColor3 = Color3.fromRGB(255, 80, 80)
+        return
+    end
+    
+    btnBuild.Text = "CONSTRUCTING SECTOR MATRIX..."
+    btnBuild.Active = false
+    previewFolder:ClearAllChildren()
+    
+    local blocksContainer = workspace:WaitForChild("Blocks", 5)
+    local playerBlocksFolder = blocksContainer and blocksContainer:WaitForChild(LocalPlayer.Name, 5)
+    
+    for i = 1, steps do
+        local angle = (i / steps) * math.pi * 2
+        local xOffset = math.cos(angle) * radius
+        local zOffset = math.sin(angle) * radius
+        
+        local targetPlacementPos = Vector3.new(selectedCenterPos.X + xOffset, selectedCenterPos.Y, selectedCenterPos.Z + zOffset)
+        local placementCFrame = CFrame.lookAt(targetPlacementPos, selectedCenterPos)
+        local hitPositionCFrame = CFrame.new(targetPlacementPos) * CFrame.Angles(0, angle, 0)
+        
+        local initialChildren = playerBlocksFolder:GetChildren()
+        
+        -- Virtual Part Placement Invoke Pass
+        local placeArgs = { blockName, 8001, Instance.new("Part", nil), placementCFrame, true, hitPositionCFrame, false }
+        buildingRF:InvokeServer(unpack(placeArgs))
+        
+        local dynamicBlockPath = nil
+        local retries = 0
+        while not dynamicBlockPath and retries < 30 do
+            task.wait(0.01)
+            local currentChildren = playerBlocksFolder:GetChildren()
+            if #currentChildren > #initialChildren then dynamicBlockPath = currentChildren[#currentChildren] end
+            retries = retries + 1
+        end
+        
+        if dynamicBlockPath then
+            -- Set custom block scale dimensions
+            local targetSize = Vector3.new(sizeX, sizeY, sizeZ)
+            local scaleVector = (vector and vector.create) and vector.create(targetSize.X, targetSize.Y, targetSize.Z) or targetSize
+            local scaleArgs = { dynamicBlockPath, scaleVector, placementCFrame }
+            scalingRF:InvokeServer(unpack(scaleArgs))
+            task.wait(0.01)
+            
+            -- Set custom block color properties
+            local paintArgs = { { { dynamicBlockPath, currentColor }, { dynamicBlockPath, currentColor }, { dynamicBlockPath, currentColor } } }
+            paintingRF:InvokeServer(unpack(paintArgs))
+        end
+        task.wait(0.03)
+    end
+    
+    btnBuild.Text = "🚀 COMMENCE RING GENERATION"
+    btnBuild.Active = true
+    statusLabel.Text = "Matrix Sequence Completed Successfully!"
+    statusLabel.TextColor3 = Color3.fromRGB(80, 240, 80)
+end)
