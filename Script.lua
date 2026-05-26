@@ -1,5 +1,5 @@
 -- =============================================================================
--- MATRIX CONFIGURATION: MATERIAL CHANGE SELECTION INTERFACE
+-- MATRIX CONFIGURATION: EXTRA INTERFACE EXTENSIONS & ITEM SELECTOR
 -- =============================================================================
 local Players = game:GetService("Players")
 local LocalPlayer = Players.LocalPlayer
@@ -29,25 +29,23 @@ local HelpPanel = uiData.HelpPanel
 local isSelecting = false
 local dataFolder = LocalPlayer:WaitForChild("Data")
 
--- NEW: Main selection button placed directly inside your primary window grid layout
+-- NEW: Change Material button placed directly below "Select Center Target Block"
 local btnChangeBlock = Instance.new("TextButton", MainFrame)
 btnChangeBlock.Size = UDim2.new(1, -30, 0, 36)
-btnChangeBlock.Position = UDim2.new(0, 15, 0, 295) -- Fits cleanly under data fields
-btnChangeBlock.Text = "Change Block Material: PlasticBlock"
+btnChangeBlock.Position = UDim2.new(0, 15, 0, 376) -- Directly below the Select Center button
+btnChangeBlock.Text = "Change Material: PlasticBlock"
 btnChangeBlock.TextColor3 = Color3.fromRGB(255, 255, 255)
 btnChangeBlock.TextSize = 12
 btnChangeBlock.Font = Enum.Font.GothamBold
-btnChangeBlock.BackgroundColor3 = Color3.fromRGB(150, 40, 200)
+btnChangeBlock.BackgroundColor3 = Color3.fromRGB(155, 80, 180) -- Matching style profile
 btnChangeBlock.BorderSizePixel = 0
 Instance.new("UICorner", btnChangeBlock).CornerRadius = UDim.new(0, 6)
 
--- Push down your original selection parts so they don't overlap the new block changer
-statusLabel.Position = UDim2.new(0, 15, 0, 335)
-btnSelect.Position = UDim2.new(0, 15, 0, 365)
-btnPreview.Position = UDim2.new(0, 15, 0, 406)
-btnBuild.Position = UDim2.new(0, 15, 0, 447)
+-- Shift the lower buttons downward cleanly so nothing overlaps
+btnPreview.Position = UDim2.new(0, 15, 0, 417)
+btnBuild.Position = UDim2.new(0, 15, 0, 458)
 
--- The pop-out block panel window
+-- NEW: Block Selection Panel that behaves exactly like the Help Panel side-window
 local BlockPanel = Instance.new("Frame", MainFrame)
 BlockPanel.Name = "BlockSelectionPanel"
 BlockPanel.Size = UDim2.new(0, 240, 1, 0)
@@ -59,9 +57,9 @@ Instance.new("UICorner", BlockPanel).CornerRadius = UDim.new(0, 10)
 
 local PanelTitle = Instance.new("TextLabel", BlockPanel)
 PanelTitle.Size = UDim2.new(1, 0, 0, 40)
-PanelTitle.Text = "SELECT OWNED BLOCK"
+PanelTitle.Text = "AVAILABLE BUILDING MATERIALS"
 PanelTitle.TextColor3 = Color3.fromRGB(255, 255, 255)
-PanelTitle.TextSize = 12
+PanelTitle.TextSize = 11
 PanelTitle.Font = Enum.Font.GothamBold
 PanelTitle.BackgroundColor3 = Color3.fromRGB(44, 44, 50)
 Instance.new("UICorner", PanelTitle).CornerRadius = UDim.new(0, 10)
@@ -79,11 +77,10 @@ local UIListLayout = Instance.new("UIListLayout", ScrollingFrame)
 UIListLayout.Padding = UDim.new(0, 4)
 UIListLayout.SortOrder = Enum.SortOrder.Name
 
--- Default configuration token fallback variable
 _G.SelectedBuildMaterialToken = "PlasticBlock"
 
 -- =============================================================================
--- INTERFACE REFRACTION: POPUP CONTROLLER & INVENTORY MAPPING
+-- INTERFACE REFRACTION: SIDE PANEL TOGGLES & VALUE SYNCHRONIZATION
 -- =============================================================================
 btnChangeBlock.MouseButton1Click:Connect(function()
 	ColorPanel.Visible = false
@@ -108,7 +105,7 @@ local function updateInventoryLayout()
 			itemBtn.Size = UDim2.new(1, -5, 0, 30)
 			itemBtn.Text = "  " .. item.Name .. " (" .. tostring(item.Value) .. ")"
 			itemBtn.TextColor3 = (_G.SelectedBuildMaterialToken == item.Name) and Color3.fromRGB(255, 255, 255) or Color3.fromRGB(190, 190, 195)
-			itemBtn.BackgroundColor3 = (_G.SelectedBuildMaterialToken == item.Name) and Color3.fromRGB(150, 40, 200) or Color3.fromRGB(44, 44, 50)
+			itemBtn.BackgroundColor3 = (_G.SelectedBuildMaterialToken == item.Name) and Color3.fromRGB(0, 122, 215) or Color3.fromRGB(44, 44, 50)
 			itemBtn.Font = Enum.Font.GothamSemibold
 			itemBtn.TextSize = 11
 			itemBtn.TextXAlignment = Enum.TextXAlignment.Left
@@ -117,8 +114,8 @@ local function updateInventoryLayout()
 			
 			itemBtn.MouseButton1Click:Connect(function()
 				_G.SelectedBuildMaterialToken = item.Name
-				btnChangeBlock.Text = "Material: " .. item.Name
-				BlockPanel.Visible = false -- Closes list menu window on block chosen selection
+				btnChangeBlock.Text = "Change Material: " .. item.Name
+				BlockPanel.Visible = false -- Closes panel after selection just like a regular dropdown menu
 				updateInventoryLayout()
 			end)
 		end
@@ -132,7 +129,7 @@ for _, item in ipairs(dataFolder:GetChildren()) do
 		item.Changed:Connect(function()
 			if _G.SelectedBuildMaterialToken == item.Name and item.Value <= 0 then
 				_G.SelectedBuildMaterialToken = "PlasticBlock"
-				btnChangeBlock.Text = "Change Block Material: PlasticBlock"
+				btnChangeBlock.Text = "Change Material: PlasticBlock"
 			end
 			updateInventoryLayout()
 		end)
@@ -218,7 +215,7 @@ btnBuild.MouseButton1Click:Connect(function()
 		local pCF, hCF = CFrame.lookAt(targetPlacementPos, selectedCenterPos), CFrame.new(targetPlacementPos) * CFrame.Angles(0, angle, 0)
 		local initialChildren = folder:GetChildren()
 		
-		-- PASSES CHOSEN TOKEN SPECIFIED BY THE DATA SELECTION POPUP MENU DIRECTLY
+		-- FIX: Passes the exact block item you clicked out of your sidebar selection menu directly to the server remote!
 		bRF:InvokeServer(_G.SelectedBuildMaterialToken, 8001, Instance.new("Part", nil), pCF, true, hCF, false)
 		
 		local dynamicBlockPath, retries = nil, 0
