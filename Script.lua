@@ -29,10 +29,10 @@ local HelpPanel = uiData.HelpPanel
 local isSelecting = false
 local dataFolder = LocalPlayer:WaitForChild("Data")
 
--- FIX: Main Frame expanded to 580px height to prevent text crowding or layout overlap
+-- Window height optimized to 580px to safely prevent text elements from clipping
 MainFrame.Size = UDim2.new(0, 330, 0, 580)
 
--- NEW: Change Material button placed perfectly below "Select Center Target Block"
+-- Dedicated material selection button placed beneath target tracking options
 local btnChangeBlock = Instance.new("TextButton", MainFrame)
 btnChangeBlock.Size = UDim2.new(1, -30, 0, 36)
 btnChangeBlock.Position = UDim2.new(0, 15, 0, 376) 
@@ -44,11 +44,11 @@ btnChangeBlock.BackgroundColor3 = Color3.fromRGB(155, 80, 180)
 btnChangeBlock.BorderSizePixel = 0
 Instance.new("UICorner", btnChangeBlock).CornerRadius = UDim.new(0, 6)
 
--- FIX: Repositioned remaining lower elements down cleanly with consistent padding
+-- Lower interface options relocated downward uniformly
 btnPreview.Position = UDim2.new(0, 15, 0, 427)
 btnBuild.Position = UDim2.new(0, 15, 0, 478)
 
--- NEW: Material Panel that opens horizontally on the right side (matching Help Panel mechanics)
+-- Side sliding menu frame behaving identically to your manual documentation log panels
 local BlockPanel = Instance.new("Frame", MainFrame)
 BlockPanel.Name = "BlockSelectionPanel"
 BlockPanel.Size = UDim2.new(0, 240, 1, 0)
@@ -80,11 +80,11 @@ local UIListLayout = Instance.new("UIListLayout", ScrollingFrame)
 UIListLayout.Padding = UDim.new(0, 4)
 UIListLayout.SortOrder = Enum.SortOrder.Name
 
--- FIX: Sets "PlasticBlock" as your fallback build item token initialization default
+-- Sets the string token variable baseline standard to "PlasticBlock" 
 _G.SelectedBuildMaterialToken = "PlasticBlock"
 
 -- =============================================================================
--- INTERFACE REFRACTION: POPUP TOGGLES & INTERACTION LOCKS
+-- INTERFACE REFRACTION: POPUP TOGGLES & VALUE SYNCHRONIZATION
 -- =============================================================================
 btnChangeBlock.MouseButton1Click:Connect(function()
 	ColorPanel.Visible = false
@@ -116,7 +116,6 @@ local function updateInventoryLayout()
 			itemBtn.BorderSizePixel = 0
 			Instance.new("UICorner", itemBtn).CornerRadius = UDim.new(0, 4)
 			
-			-- FIX: Updates the labels and changes your building block to match the item name exactly
 			itemBtn.MouseButton1Click:Connect(function()
 				_G.SelectedBuildMaterialToken = item.Name
 				btnChangeBlock.Text = "Change Material: " .. item.Name
@@ -132,7 +131,6 @@ dataFolder.ChildAdded:Connect(updateInventoryLayout)
 for _, item in ipairs(dataFolder:GetChildren()) do
 	if item:IsA("ValueBase") then
 		item.Changed:Connect(function()
-			-- FIX: Reverts your selected active block back to default PlasticBlock if quantities run out
 			if _G.SelectedBuildMaterialToken == item.Name and item.Value <= 0 then
 				_G.SelectedBuildMaterialToken = "PlasticBlock"
 				btnChangeBlock.Text = "Change Material: PlasticBlock"
@@ -164,6 +162,7 @@ btnSelect.MouseButton1Click:Connect(function()
 		local target = Mouse.Target
 		if target and target:IsA("BasePart") then
 			uiData.selectedCenterPos = target.Position
+			uiData.selectedTargetParent = target.Parent -- Saves parent plot group zone reference (e.g. BlueZone)
 			statusLabel.Text = "Anchor Node Position Synchronized: " .. target.Name
 			statusLabel.TextColor3 = Color3.fromRGB(80, 240, 80)
 			renderConnection:Disconnect()
@@ -177,10 +176,11 @@ btnSelect.MouseButton1Click:Connect(function()
 end)
 
 -- =============================================================================
--- PLACEMENT PIPELINE: HARDWARE VERIFICATION & REMOTE PIPES
+-- PLACEMENT PIPELINE: ACCURATE NETWORK STRUCT EMBEDDING
 -- =============================================================================
 btnBuild.MouseButton1Click:Connect(function()
 	local selectedCenterPos = uiData.selectedCenterPos
+	local selectedTargetParent = uiData.selectedTargetParent or workspace
 	if isSelecting or not selectedCenterPos then 
 		statusLabel.Text, statusLabel.TextColor3 = "Error: Select Center Target First!", Color3.fromRGB(255, 80, 80)
 		return 
@@ -218,15 +218,25 @@ btnBuild.MouseButton1Click:Connect(function()
 		local angle = (i / steps) * math.pi * 2
 		local targetPlacementPos = Vector3.new(selectedCenterPos.X + math.cos(angle) * radius, selectedCenterPos.Y, selectedCenterPos.Z + math.sin(angle) * radius)
 		
-		local pCF, hCF = CFrame.lookAt(targetPlacementPos, selectedCenterPos), CFrame.new(targetPlacementPos) * CFrame.Angles(0, angle, 0)
+		local pCF = CFrame.lookAt(targetPlacementPos, selectedCenterPos)
+		local hCF = CFrame.new(targetPlacementPos) * CFrame.Angles(0, angle, 0)
 		local initialChildren = folder:GetChildren()
 		
-		-- FIX: Generates an instance component with the exact name matched to your menu chosen selection variable token
-		local itemBlockInstance = Instance.new("Part")
-		itemBlockInstance.Name = _G.SelectedBuildMaterialToken
+		-- CORRECTION: Embedded your unique 1059 parameters and converted your clicked sidebar selection into a raw string value
+		local blockNameString = tostring(_G.SelectedBuildMaterialToken)
 		
-		-- FIX: Fires your custom clicked block selection token down into your game remote pipeline parameters
-		bRF:InvokeServer(_G.SelectedBuildMaterialToken, 8001, itemBlockInstance, pCF, true, hCF, false)
+		-- Arguments array structure layout formatted exactly like your game code trace logs
+		local invokeArgs = {
+			blockNameString,       -- [1] Item token identifier name string (e.g. "WoodBlock")
+			1059,                  -- [2] Game sequence positioning identifier code
+			selectedTargetParent,  -- [3] Active targeted canvas plot area zone object reference
+			pCF,                   -- [4] Calculated target curve angle mapping coordinate structure
+			true,                  -- [5] Verification alignment logic 
+			hCF,                   -- [6] Positional workspace matrix configuration offset coordinates
+			false                  -- [7] Dynamic placement lock value setting
+		}
+		
+		bRF:InvokeServer(unpack(invokeArgs))
 		
 		local dynamicBlockPath, retries = nil, 0
 		while not dynamicBlockPath and retries < 30 do
