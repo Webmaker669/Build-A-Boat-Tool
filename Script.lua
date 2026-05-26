@@ -1,5 +1,5 @@
 -- =============================================================================
--- PART 1: SYSTEM SETUP: WINDOW FRAME & INTERFACE CONTROLS
+-- SYSTEM SETUP: WINDOW FRAME & INTERFACE CONTROLS
 -- =============================================================================
 local CoreGui = game:GetService("CoreGui")
 if CoreGui:FindFirstChild("CircleBuilderUI") then
@@ -60,7 +60,7 @@ HelpBtn.Font = Enum.Font.GothamBold
 HelpBtn.TextSize = 14
 Instance.new("UICorner", HelpBtn).CornerRadius = UDim.new(0, 6)
 
-local function createInputField(labelText, yPos, defaultValue, editable, objName)
+local function createInputField(labelText, yPos, defaultValue, editable)
 	local label = Instance.new("TextLabel", MainFrame)
 	label.Size = UDim2.new(0, 150, 0, 28)
 	label.Position = UDim2.new(0, 15, 0, yPos)
@@ -72,7 +72,6 @@ local function createInputField(labelText, yPos, defaultValue, editable, objName
 	label.Font = Enum.Font.Gotham
 	
 	local box = Instance.new("TextBox", MainFrame)
-	box.Name = objName
 	box.Size = UDim2.new(0, 130, 0, 28)
 	box.Position = UDim2.new(0, 175, 0, yPos)
 	box.Text = defaultValue
@@ -86,35 +85,46 @@ local function createInputField(labelText, yPos, defaultValue, editable, objName
 	return box
 end
 
-createInputField("Circle Radius / Range:", 60, "20", true, "InputRadius")
-createInputField("Total Parts Count:", 100, "30", true, "InputSteps")
-createInputField("Block Height (Y):", 140, "2", true, "InputSizeY")
-createInputField("Active Block Type:", 180, "PlasticBlock", true, "InputBlockType")
-createInputField("Calculated Width (X):", 220, "0.00", false, "InputSizeX")
-createInputField("Calculated Depth (Z):", 260, "0.00", false, "InputSizeZ")
+local inputRadius = createInputField("Circle Radius / Range:", 60, "20", true)
+local inputSteps = createInputField("Total Parts Count:", 100, "30", true)
+local inputSizeY = createInputField("Block Height (Y):", 140, "2", true)
+local inputBlockType = createInputField("Active Block Type:", 180, "PlasticBlock", true)
+local inputSizeX = createInputField("Calculated Width (X):", 220, "0.00", false)
+local inputSizeZ = createInputField("Calculated Depth (Z):", 260, "0.00", false)
 
-CloseBtn.MouseButton1Click:Connect(function()
-	MainFrame.Visible = false
-	ReopenButton.Visible = true
-end)
+_G.CircleBuilderUI_SharedData = {
+	MainFrame = MainFrame,
+	inputRadius = inputRadius,
+	inputSteps = inputSteps,
+	inputSizeY = inputSizeY,
+	inputBlockType = inputBlockType,
+	inputSizeX = inputSizeX,
+	inputSizeZ = inputSizeZ,
+	CloseBtn = CloseBtn,
+	HelpBtn = HelpBtn,
+	ReopenButton = ReopenButton
+}
 
-ReopenButton.MouseButton1Click:Connect(function()
-	MainFrame.Visible = true
-	ReopenButton.Visible = false
-end)
--- // END OF FILE //
+_G.ActiveCircleBuilderColorData = {
+	CurrentR = 1,
+	CurrentG = 1,
+	CurrentB = 1,
+	ColorObject = Color3.new(1, 1, 1)
+}
+-- // END OF FILE: Part_1_UI_Base.lua //
 
 -- =============================================================================
--- PART 2: INTERFACE LAYOUTS: SUBMENUS & OPERATION MANUALS
+-- INTERFACE LAYOUTS: SUBMENUS & OPERATION MANUALS
 -- =============================================================================
-local CoreGui = game:GetService("CoreGui")
-local ScreenGui = CoreGui:WaitForChild("CircleBuilderUI")
-local MainFrame = ScreenGui:WaitForChild("MainFrame")
-local HelpBtn = MainFrame:WaitForChild("HelpBtn")
+local uiData = _G.CircleBuilderUI_SharedData
+if not uiData or not uiData.MainFrame then error("Run Part 1 first.") end
+
+local MainFrame = uiData.MainFrame
+local colorData = _G.ActiveCircleBuilderColorData
 
 local colorLabel = Instance.new("TextLabel", MainFrame)
 colorLabel.Size = UDim2.new(0, 150, 0, 30)
-colorLabel.Position = UDim2.new(0, 15, 0, 300)
+colorLabel.Position = UDim2.new(0, 15, 0, 260)
 colorLabel.Text = "Active Build Color:"
 colorLabel.TextColor3 = Color3.fromRGB(190, 190, 195)
 colorLabel.TextSize = 13
@@ -123,27 +133,25 @@ colorLabel.BackgroundTransparency = 1
 colorLabel.Font = Enum.Font.Gotham
 
 local btnColorPicker = Instance.new("TextButton", MainFrame)
-btnColorPicker.Name = "BtnColorPicker"
 btnColorPicker.Size = UDim2.new(0, 130, 0, 28)
-btnColorPicker.Position = UDim2.new(0, 175, 0, 300)
+btnColorPicker.Position = UDim2.new(0, 175, 0, 260)
 btnColorPicker.Text = ""
 btnColorPicker.Font = Enum.Font.GothamBold
-btnColorPicker.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+btnColorPicker.BackgroundColor3 = colorData.ColorObject
 Instance.new("UICorner", btnColorPicker).CornerRadius = UDim.new(0, 5)
 
+-- Spacing fixes applied below to prevent component overlaps
 local statusLabel = Instance.new("TextLabel", MainFrame)
-statusLabel.Name = "StatusLabel"
 statusLabel.Size = UDim2.new(1, -30, 0, 30)
-statusLabel.Position = UDim2.new(0, 15, 0, 335)
+statusLabel.Position = UDim2.new(0, 15, 0, 310)
 statusLabel.Text = "Center Target Block: Not Selected"
 statusLabel.TextColor3 = Color3.fromRGB(240, 90, 90)
 statusLabel.TextSize = 12
 statusLabel.Font = Enum.Font.GothamSemibold
 statusLabel.BackgroundTransparency = 1
 
-local function createButton(text, yPos, color, objName)
+local function createButton(text, yPos, color)
 	local btn = Instance.new("TextButton", MainFrame)
-	btn.Name = objName
 	btn.Size = UDim2.new(1, -30, 0, 36)
 	btn.Position = UDim2.new(0, 15, 0, yPos)
 	btn.Text = text
@@ -156,9 +164,9 @@ local function createButton(text, yPos, color, objName)
 	return btn
 end
 
-createButton("Select Center Target Block", 375, Color3.fromRGB(0, 122, 215), "BtnSelect")
-createButton("Hologram Preview Configuration: Disabled", 416, Color3.fromRGB(110, 110, 115), "BtnPreview")
-createButton("Commence Circle Construction", 457, Color3.fromRGB(46, 139, 87), "BtnBuild")
+local btnSelect = createButton("Select Center Target Block", 345, Color3.fromRGB(0, 122, 215))
+local btnPreview = createButton("Hologram Preview Configuration: Disabled", 388, Color3.fromRGB(110, 110, 115))
+local btnBuild = createButton("Commence Circle Construction", 431, Color3.fromRGB(46, 139, 87))
 
 local HelpPanel = Instance.new("Frame", MainFrame)
 HelpPanel.Name = "HelpSelectionPanel"
@@ -213,12 +221,16 @@ local ColorIndicator = Instance.new("Frame", ColorPanel)
 ColorIndicator.Name = "ColorIndicator"
 ColorIndicator.Size = UDim2.new(1, -30, 0, 40)
 ColorIndicator.Position = UDim2.new(0, 15, 0, 55)
-ColorIndicator.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+ColorIndicator.BackgroundColor3 = colorData.ColorObject
 Instance.new("UICorner", ColorIndicator).CornerRadius = UDim.new(0, 5)
 
-local function createColorSlider(channelName, yPos, defaultFraction, objName)
+local IndicatorText = Instance.new("TextLabel", ColorIndicator)
+IndicatorText.Size = UDim2.new(1, 0, 1, 0)
+IndicatorText.Text = ""
+IndicatorText.BackgroundTransparency = 1
+
+local function createColorSlider(channelName, yPos, defaultFraction)
 	local label = Instance.new("TextLabel", ColorPanel)
-	label.Name = objName .. "Label"
 	label.Size = UDim2.new(1, -30, 0, 20)
 	label.Position = UDim2.new(0, 15, 0, yPos)
 	label.Text = channelName .. ": " .. string.format("%.0f", defaultFraction * 255)
@@ -229,7 +241,6 @@ local function createColorSlider(channelName, yPos, defaultFraction, objName)
 	label.Font = Enum.Font.GothamSemibold
 	
 	local track = Instance.new("Frame", ColorPanel)
-	track.Name = objName .. "Track"
 	track.Size = UDim2.new(1, -30, 0, 6)
 	track.Position = UDim2.new(0, 15, 0, yPos + 22)
 	track.BackgroundColor3 = Color3.fromRGB(55, 55, 60)
@@ -237,20 +248,19 @@ local function createColorSlider(channelName, yPos, defaultFraction, objName)
 	Instance.new("UICorner", track).CornerRadius = UDim.new(0, 3)
 	
 	local button = Instance.new("TextButton", track)
-	button.Name = objName .. "Btn"
 	button.Size = UDim2.new(0, 14, 0, 14)
 	button.Position = UDim2.new(defaultFraction, -7, 0.5, -7)
 	button.BackgroundColor3 = Color3.fromRGB(240, 240, 245)
 	button.Text = ""
 	Instance.new("UICorner", button).CornerRadius = UDim.new(0, 7)
+	return label, track, button
 end
 
-createColorSlider("Red Input", 110, 1, "R")
-createColorSlider("Green Input", 160, 1, "G")
-createColorSlider("Blue Input", 210, 1, "B")
+local rLabel, rTrack, rBtn = createColorSlider("Red Input", 110, 1)
+local gLabel, gTrack, gBtn = createColorSlider("Green Input", 160, 1)
+local bLabel, bTrack, bBtn = createColorSlider("Blue Input", 210, 1)
 
 local hexBox = Instance.new("TextBox", ColorPanel)
-hexBox.Name = "HexBox"
 hexBox.Size = UDim2.new(1, -30, 0, 30)
 hexBox.Position = UDim2.new(0, 15, 0, 295)
 hexBox.Text = "#FFFFFF"
@@ -261,6 +271,100 @@ hexBox.Font = Enum.Font.GothamSemibold
 hexBox.TextSize = 12
 Instance.new("UICorner", hexBox).CornerRadius = UDim.new(0, 5)
 
+uiData.btnColorPicker = btnColorPicker
+uiData.statusLabel = statusLabel
+uiData.btnSelect = btnSelect
+uiData.btnPreview = btnPreview
+uiData.btnBuild = btnBuild
+uiData.ColorIndicator = ColorIndicator
+uiData.IndicatorText = IndicatorText
+uiData.hexBox = hexBox
+uiData.rLabel = rLabel
+uiData.rTrack = rTrack
+uiData.rBtn = rBtn
+uiData.gLabel = gLabel
+uiData.gTrack = gTrack
+uiData.gBtn = gBtn
+uiData.bLabel = bLabel
+uiData.bTrack = bTrack
+uiData.bBtn = bBtn
+uiData.ColorPanel = ColorPanel
+uiData.HelpPanel = HelpPanel
+-- // END OF FILE: Part_2_Submenus.lua //
+
+-- =============================================================================
+-- INTERACTIVE SUBSYSTEMS: HOLOGRAM RESPONSIVENESS & INPUT TRACKING
+-- =============================================================================
+local CoreGui = game:GetService("CoreGui")
+local RunService = game:GetService("RunService")
+local Players = game:GetService("Players")
+local LocalPlayer = Players.LocalPlayer
+local Mouse = LocalPlayer:GetMouse()
+
+local uiData = _G.CircleBuilderUI_SharedData
+local colorData = _G.ActiveCircleBuilderColorData
+if not uiData or not uiData.btnBuild then error("Run Part 2 first.") end
+
+local MainFrame = uiData.MainFrame
+local CloseBtn = uiData.CloseBtn
+local HelpBtn = uiData.HelpBtn
+local ReopenButton = uiData.ReopenButton
+local inputRadius = uiData.inputRadius
+local inputSteps = uiData.inputSteps
+local inputSizeY = uiData.inputSizeY
+local inputSizeX = uiData.inputSizeX
+local inputSizeZ = uiData.inputSizeZ
+local btnColorPicker = uiData.btnColorPicker
+local statusLabel = uiData.statusLabel
+local btnSelect = uiData.btnSelect
+local btnPreview = uiData.btnPreview
+local btnBuild = uiData.btnBuild
+local ColorIndicator = uiData.ColorIndicator
+local ColorPanel = uiData.ColorPanel
+local HelpPanel = uiData.HelpPanel
+local hexBox = uiData.hexBox
+local rLabel, rTrack, rBtn = uiData.rLabel, uiData.rTrack, uiData.rBtn
+local gLabel, gTrack, gBtn = uiData.gLabel, uiData.gTrack, uiData.gBtn
+local bLabel, bTrack, bBtn = uiData.bLabel, uiData.bTrack, uiData.bBtn
+
+local CopyBox = Instance.new("TextBox", MainFrame)
+CopyBox.Size = UDim2.new(1, -30, 0, 32)
+CopyBox.Position = UDim2.new(0, 15, 1, -45)
+CopyBox.Text = "https://discord.gg"
+CopyBox.TextColor3 = Color3.fromRGB(114, 137, 218)
+CopyBox.BackgroundColor3 = Color3.fromRGB(44, 47, 51)
+CopyBox.Font = Enum.Font.GothamBold
+CopyBox.TextSize = 11
+CopyBox.ClearTextOnFocus = false
+CopyBox.TextEditable = false
+Instance.new("UICorner", CopyBox).CornerRadius = UDim.new(0, 6)
+
+if workspace:FindFirstChild("CirclePreviewFolder") then
+	workspace.CirclePreviewFolder:Destroy()
+end
+
+local previewFolder = Instance.new("Folder", workspace)
+previewFolder.Name = "CirclePreviewFolder"
+
+local selectionBox = Instance.new("SelectionBox", CoreGui)
+selectionBox.Color3 = Color3.fromRGB(0, 255, 255)
+selectionBox.LineThickness = 0.04
+
+local isSelecting = false
+local showLivePreview = false
+
+CloseBtn.MouseButton1Click:Connect(function()
+	MainFrame.Visible = false
+	ReopenButton.Visible = true
+	ColorPanel.Visible = false
+	HelpPanel.Visible = false
+end)
+
+ReopenButton.MouseButton1Click:Connect(function()
+	MainFrame.Visible = true
+	ReopenButton.Visible = false
+end)
+
 btnColorPicker.MouseButton1Click:Connect(function()
 	HelpPanel.Visible = false
 	ColorPanel.Visible = not ColorPanel.Visible
@@ -270,90 +374,121 @@ HelpBtn.MouseButton1Click:Connect(function()
 	ColorPanel.Visible = false
 	HelpPanel.Visible = not HelpPanel.Visible
 end)
--- // END OF FILE //
 
--- =============================================================================
--- PART 3: INTERACTIVE SUBSYSTEMS: PHYSICS ENGINE SLIDERS & MATHS
--- =============================================================================
-local CoreGui = game:GetService("CoreGui")
-local UserInputService = game:GetService("UserInputService")
-
-local ScreenGui = CoreGui:WaitForChild("CircleBuilderUI")
-local MainFrame = ScreenGui:WaitForChild("MainFrame")
-local btnColorPicker = MainFrame:WaitForChild("BtnColorPicker")
-local ColorPanel = MainFrame:WaitForChild("ColorSelectionPanel")
-local ColorIndicator = ColorPanel:WaitForChild("ColorIndicator")
-local hexBox = ColorPanel:WaitForChild("HexBox")
-
-local sliders = {
-	R = {track = ColorPanel:WaitForChild("RTrack"), btn = ColorPanel:WaitForChild("RTrack"):WaitForChild("RBtn"), label = ColorPanel:WaitForChild("RLabel"), val = 1},
-	G = {track = ColorPanel:WaitForChild("GTrack"), btn = ColorPanel:WaitForChild("GTrack"):WaitForChild("GBtn"), label = ColorPanel:WaitForChild("GLabel"), val = 1},
-	B = {track = ColorPanel:WaitForChild("BTrack"), btn = ColorPanel:WaitForChild("BTrack"):WaitForChild("BBtn"), label = ColorPanel:WaitForChild("BLabel"), val = 1}
-}
-
-local function updateColorSystem()
-	local col = Color3.new(sliders.R.val, sliders.G.val, sliders.B.val)
-	ColorIndicator.BackgroundColor3 = col
-	btnColorPicker.BackgroundColor3 = col
+local function updateRealtimeVisualizerRing()
+	previewFolder:ClearAllChildren()
+	local center = uiData.selectedCenterPos
+	if not center then return end
 	
-	-- Store live color object reference directly inside the frame for Parts 4 and 5
-	MainFrame:SetAttribute("ActiveColor", Vector3.new(sliders.R.val, sliders.G.val, sliders.B.val))
+	local radius = tonumber(inputRadius.Text) or 20
+	local steps = tonumber(inputSteps.Text) or 30
+	local sizeY = tonumber(inputSizeY.Text) or 2
+	local circumference = 2 * math.pi * radius
+	local sizeZ = circumference / steps
+	local sizeX = (2 * radius * math.tan(math.pi / steps)) + 0.02
+	
+	inputSizeX.Text, inputSizeZ.Text = string.format("%.3f", sizeX), string.format("%.3f", sizeZ)
+	
+	if not showLivePreview then return end
+	
+	for i = 1, steps do
+		local angle = (i / steps) * math.pi * 2
+		local targetPlacementPos = Vector3.new(center.X + math.cos(angle) * radius, center.Y, center.Z + math.sin(angle) * radius)
+		
+		local hPart = Instance.new("Part")
+		hPart.Size = Vector3.new(sizeX, sizeY, sizeZ)
+		hPart.CFrame = CFrame.lookAt(targetPlacementPos, center)
+		hPart.Color = colorData.ColorObject
+		hPart.Transparency = 0.5
+		hPart.Anchored = true
+		hPart.CanCollide = false
+		hPart.Material = Enum.Material.SmoothPlastic
+		hPart.Parent = previewFolder
+		
+		local sb = Instance.new("SelectionBox", hPart)
+		sb.Adornee = hPart
+		sb.Color3 = colorData.ColorObject
+		sb.LineThickness = 0.02
+	end
 end
 
-local function setupSlider(sliderKey, prefix)
-	local slider = sliders[sliderKey]
+local function applyColorTransformations()
+	colorData.ColorObject = Color3.new(colorData.CurrentR, colorData.CurrentG, colorData.CurrentB)
+	ColorIndicator.BackgroundColor3, btnColorPicker.BackgroundColor3 = colorData.ColorObject, colorData.ColorObject
+	updateRealtimeVisualizerRing()
+end
+
+local function attachSliderPhysics(button, track, label, prefix, channelCallback)
 	local isDragging = false
+	button.MouseButton1Down:Connect(function() isDragging = true end)
 	
-	slider.btn.MouseButton1Down:Connect(function() isDragging = true end)
-	
-	UserInputService.InputChanged:Connect(function(input)
+	game:GetService("UserInputService").InputChanged:Connect(function(input)
 		if isDragging and input.UserInputType == Enum.UserInputType.MouseMovement then
-			local relativeX = math.clamp((input.Position.X - slider.track.AbsolutePosition.X) / slider.track.AbsoluteSize.X, 0, 1)
-			slider.btn.Position = UDim2.new(relativeX, -7, 0.5, -7)
-			slider.label.Text = prefix .. ": " .. string.format("%.0f", relativeX * 255)
-			slider.val = relativeX
-			updateColorSystem()
+			local relativeX = math.clamp((input.Position.X - track.AbsolutePosition.X) / track.AbsoluteSize.X, 0, 1)
+			button.Position = UDim2.new(relativeX, -7, 0.5, -7)
+			label.Text = prefix .. ": " .. string.format("%.0f", relativeX * 255)
+			channelCallback(relativeX)
+			applyColorTransformations()
 		end
 	end)
 	
-	UserInputService.InputEnded:Connect(function(input)
+	game:GetService("UserInputService").InputEnded:Connect(function(input)
 		if input.UserInputType == Enum.UserInputType.MouseButton1 then isDragging = false end
 	end)
 end
 
-setupSlider("R", "Red Input")
-setupSlider("G", "Green Input")
-setupSlider("B", "Blue Input")
+attachSliderPhysics(rBtn, rTrack, rLabel, "Red Input", function(val) colorData.CurrentR = val end)
+attachSliderPhysics(gBtn, gTrack, gLabel, "Green Input", function(val) colorData.CurrentG = val end)
+attachSliderPhysics(bBtn, bTrack, bBtn, "Blue Input", function(val) colorData.CurrentB = val end)
 
 hexBox.FocusLost:Connect(function()
 	local text = hexBox.Text:gsub("#", "")
 	if #text == 6 then
-		local r = tonumber(text:sub(1, 2), 16) or 255
-		local g = tonumber(text:sub(3, 4), 16) or 255
-		local b = tonumber(text:sub(5, 6), 16) or 255
-		
-		sliders.R.val, sliders.G.val, sliders.B.val = r/255, g/255, b/255
-		sliders.R.btn.Position = UDim2.new(sliders.R.val, -7, 0.5, -7)
-		sliders.G.btn.Position = UDim2.new(sliders.G.val, -7, 0.5, -7)
-		sliders.B.btn.Position = UDim2.new(sliders.B.val, -7, 0.5, -7)
-		
-		sliders.R.label.Text = "Red Input: " .. tostring(r)
-		sliders.G.label.Text = "Green Input: " .. tostring(g)
-		sliders.B.label.Text = "Blue Input: " .. tostring(b)
-		updateColorSystem()
+		local r = tonumber(text:sub(1, 2), 16)
+		local g = tonumber(text:sub(3, 4), 16)
+		local b = tonumber(text:sub(5, 6), 16)
+		if r and g and b then
+			colorData.CurrentR, colorData.CurrentG, colorData.CurrentB = r / 255, g / 255, b / 255
+			rBtn.Position = UDim2.new(colorData.CurrentR, -7, 0.5, -7)
+			gBtn.Position = UDim2.new(colorData.CurrentG, -7, 0.5, -7)
+			bBtn.Position = UDim2.new(colorData.CurrentB, -7, 0.5, -7)
+			rLabel.Text = "Red Input: " .. tostring(r)
+			gLabel.Text = "Green Input: " .. tostring(g)
+			bLabel.Text = "Blue Input: " .. tostring(b)
+			applyColorTransformations()
+		end
 	end
 end)
 
-updateColorSystem()
--- // END OF FILE //
+for _, box in ipairs({inputRadius, inputSteps, inputSizeY}) do
+	box:GetPropertyChangedSignal("Text"):Connect(updateRealtimeVisualizerRing)
+end
+
+btnPreview.MouseButton1Click:Connect(function()
+	showLivePreview = not showLivePreview
+	if showLivePreview then
+		btnPreview.Text, btnPreview.BackgroundColor3 = "Hologram Preview Configuration: Active", Color3.fromRGB(155, 80, 180)
+	else
+		btnPreview.Text, btnPreview.BackgroundColor3 = "Hologram Preview Configuration: Disabled", Color3.fromRGB(110, 110, 115)
+	end
+	updateRealtimeVisualizerRing()
+end)
+
+uiData.updateRealtimeVisualizerRing = updateRealtimeVisualizerRing
+uiData.previewFolder = previewFolder
+uiData.btnSelect = btnSelect
+uiData.statusLabel = statusLabel
+uiData.selectionBox = selectionBox
+uiData.Mouse = Mouse
+uiData.RunService = RunService
+uiData.LocalPlayer = LocalPlayer
+-- // END OF FILE: Part_3_Physics.lua //
 
 -- =============================================================================
--- PART 4: UNIFIED ARRAYS, DATA TRACKING & FIXED LAYOUT MECHANICS
+-- PART 4: DATA FIELD SYNCHRONIZATION & QUANTITY SYSTEM TRACKING
 -- =============================================================================
 local Players = game:GetService("Players")
 local LocalPlayer = Players.LocalPlayer
-local Mouse = LocalPlayer:GetMouse()
-local RunService = game:GetService("RunService")
 
 local uiData = _G.CircleBuilderUI_SharedData
 local colorData = _G.ActiveCircleBuilderColorData
@@ -368,147 +503,19 @@ local btnSelect = uiData.btnSelect
 local btnPreview = uiData.btnPreview
 local btnBuild = uiData.btnBuild
 local inputBlockType = uiData.inputBlockType
-local ColorPanel = uiData.ColorPanel
-local HelpPanel = uiData.HelpPanel
-local previewFolder = uiData.previewFolder
-local selectionBox = uiData.selectionBox
 
-local isSelecting = false
 local dataFolder = LocalPlayer:WaitForChild("Data", 5)
-local folder = workspace:WaitForChild("Blocks", 5):WaitForChild(LocalPlayer.Name, 5)
 
--- FIX: Exact pixel math layout adjustments to completely stop text overlapping
+-- FIX: Perfect pixel offsets to completely stop text labels from overlapping
 statusLabel.Position = UDim2.new(0, 15, 0, 310)
 btnSelect.Position = UDim2.new(0, 15, 0, 345)
 btnPreview.Position = UDim2.new(0, 15, 0, 388)
 btnBuild.Position = UDim2.new(0, 15, 0, 431)
 
--- Raycast Crosshair coordinate vector tracking routines
-btnSelect.MouseButton1Click:Connect(function()
-	if isSelecting then return end
-	isSelecting = true
-	statusLabel.Text, statusLabel.TextColor3, btnSelect.Text = "Hover over canvas plot area and select node...", Color3.fromRGB(240, 180, 20), "Awaiting Target Confirmation..."
-	
-	local renderConnection, clickConnection
-	renderConnection = RunService.RenderStepped:Connect(function()
-		local target = Mouse.Target
-		if target and target:IsA("BasePart") then
-			selectionBox.Adornee = target
-		else
-			selectionBox.Adornee = nil
-		end
-	end)
-	
-	clickConnection = Mouse.Button1Down:Connect(function()
-		local target = Mouse.Target
-		if target and target:IsA("BasePart") then
-			uiData.selectedCenterPos = target.Position
-			statusLabel.Text = "Anchor Node Position Synchronized: " .. target.Name
-			statusLabel.TextColor3 = Color3.fromRGB(80, 240, 80)
-			renderConnection:Disconnect()
-			clickConnection:Disconnect()
-			selectionBox.Adornee = nil
-			isSelecting = false
-			btnSelect.Text = "Select Center Target Block"
-			uiData.updateRealtimeVisualizerRing()
-		end
-	end)
-end)
+-- Export folder references out globally so Part 5 can communicate instantly
+uiData.dataFolder = dataFolder
 
--- Construction deploy engine invocation routines
-btnBuild.MouseButton1Click:Connect(function()
-	local selectedCenterPos = uiData.selectedCenterPos
-	if isSelecting or not selectedCenterPos then return end
-	
-	local selectedBlockString = tostring(inputBlockType.Text)
-	local blockTrackValueInstance = dataFolder and dataFolder:FindFirstChild(selectedBlockString)
-	
-	-- Verify user has blocks left inside Data folder before running building cycles
-	if not blockTrackValueInstance or (blockTrackValueInstance:IsA("ValueBase") and blockTrackValueInstance.Value <= 0) then
-		statusLabel.Text = "Build Failed: Out of " .. selectedBlockString .. "!"
-		statusLabel.TextColor3 = Color3.fromRGB(255, 80, 80)
-		return
-	end
-	
-	local radius = tonumber(uiData.inputRadius.Text) or 20
-	local steps = tonumber(uiData.inputSteps.Text) or 30
-	local sizeY = tonumber(uiData.inputSizeY.Text) or 2
-	
-	local circumference = 2 * math.pi * radius
-	local sizeZ = circumference / steps
-	local sizeX = (2 * radius * math.tan(math.pi / steps)) + 0.02
-	
-	local function findRemote(tName)
-		local tl = LocalPlayer.Backpack:FindFirstChild(tName) or (LocalPlayer.Character and LocalPlayer.Character:FindFirstChild(tName))
-		return tl and tl:FindFirstChild("RF")
-	end
-	
-	local bRF, sRF, pRF = findRemote("BuildingTool"), findRemote("ScalingTool"), findRemote("PaintingTool")
-	if not bRF or not sRF or not pRF then
-		statusLabel.Text, statusLabel.TextColor3 = "Hardware Fault: Missing active utilities!", Color3.fromRGB(255, 80, 80)
-		return
-	end
-	
-	btnPreview.Text, btnPreview.BackgroundColor3 = "Hologram Preview Configuration: Disabled", Color3.fromRGB(110, 110, 115)
-	previewFolder:ClearAllChildren()
-	ColorPanel.Visible = false
-	HelpPanel.Visible = false
-	
-	btnBuild.Text, btnBuild.Active = "Constructing Active Sector Matrix...", false
-	
-	for i = 1, steps do
-		-- Safety cutoff instantly pauses if block data inventory hits zero mid-air
-		if blockTrackValueInstance and blockTrackValueInstance.Value <= 0 then
-			statusLabel.Text = "Interrupted: Ran out of " .. selectedBlockString .. "!"
-			statusLabel.TextColor3 = Color3.fromRGB(255, 80, 80)
-			break
-		end
-
-		local angle = (i / steps) * math.pi * 2
-		local targetPlacementPos = Vector3.new(selectedCenterPos.X + math.cos(angle) * radius, selectedCenterPos.Y, selectedCenterPos.Z + math.sin(angle) * radius)
-		
-		local pCF, hCF = CFrame.lookAt(targetPlacementPos, selectedCenterPos), CFrame.new(targetPlacementPos) * CFrame.Angles(0, angle, 0)
-		local initialChildren = folder:GetChildren()
-		
-		-- PASSES USER'S EXACT LIVE INVENTORY COUNT DIRECTLY INTO THE REMOTE CALL NUMBER PARAMETER
-		bRF:InvokeServer(selectedBlockString, blockTrackValueInstance.Value, Instance.new("Part", nil), pCF, true, hCF, false)
-		
-		local dynamicBlockPath, retries = nil, 0
-		while not dynamicBlockPath and retries < 30 do
-			task.wait(0.01)
-			local currentChildren = folder:GetChildren()
-			if #currentChildren > #initialChildren then
-				dynamicBlockPath = currentChildren[#currentChildren]
-			end
-			retries = retries + 1
-		end
-		
-		if dynamicBlockPath then
-			local sVec = Vector3.new(sizeX, sizeY, sizeZ)
-			sRF:InvokeServer(dynamicBlockPath, sVec, pCF)
-			task.wait(0.01)
-			
-			local col = colorData.ColorObject
-			local args = {
-				{
-					{ dynamicBlockPath, col },
-					{ dynamicBlockPath, col },
-					{ dynamicBlockPath, col },
-					{ dynamicBlockPath, col }
-				}
-			}
-			pRF:InvokeServer(unpack(args))
-		end
-		task.wait(0.03)
-	end
-	
-	btnBuild.Text, btnBuild.Active = "Commence Circle Construction", true
-	if not string.find(statusLabel.Text, "Interrupted") then
-		statusLabel.Text, statusLabel.TextColor3 = "Matrix Sequence Completed!", Color3.fromRGB(80, 240, 80)
-	end
-end)
-
--- // END OF FILE: Part_4_Engine.lua //
+-- // END OF FILE: Part_4_Tracking.lua //
 
 -- =============================================================================
 -- PART 5: RAYCAST TARGET LOCKS & SERVER PLACEMENT NETWORK PIPES
@@ -521,7 +528,7 @@ local RunService = game:GetService("RunService")
 local uiData = _G.CircleBuilderUI_SharedData
 local colorData = _G.ActiveCircleBuilderColorData
 
-if not uiData or not uiData.verifyMaterialQuantity then 
+if not uiData or not uiData.dataFolder then 
 	error("Sequence Interrupted: Run Part 4 first.") 
 end
 
@@ -537,6 +544,7 @@ local btnSelect = uiData.btnSelect
 local selectionBox = uiData.selectionBox
 local ColorPanel = uiData.ColorPanel
 local HelpPanel = uiData.HelpPanel
+local dataFolder = uiData.dataFolder
 
 local isSelecting = false
 local folder = workspace:WaitForChild("Blocks", 5):WaitForChild(LocalPlayer.Name, 5)
@@ -579,10 +587,10 @@ btnBuild.MouseButton1Click:Connect(function()
 	if isSelecting or not selectedCenterPos then return end
 	
 	local selectedBlockString = tostring(inputBlockType.Text)
-	local canBuild, currentInventoryCount = uiData.verifyMaterialQuantity()
+	local blockTrackValueInstance = dataFolder:FindFirstChild(selectedBlockString)
 	
 	-- Verify user has blocks left inside Data folder before running building cycles
-	if not canBuild then
+	if not blockTrackValueInstance or (blockTrackValueInstance:IsA("ValueBase") and blockTrackValueInstance.Value <= 0) then
 		statusLabel.Text = "Build Failed: Out of " .. selectedBlockString .. "!"
 		statusLabel.TextColor3 = Color3.fromRGB(255, 80, 80)
 		return
@@ -614,8 +622,6 @@ btnBuild.MouseButton1Click:Connect(function()
 	
 	btnBuild.Text, btnBuild.Active = "Constructing Active Sector Matrix...", false
 	
-	local blockTrackValueInstance = uiData.dataFolder:FindFirstChild(selectedBlockString)
-	
 	for i = 1, steps do
 		-- Safety cutoff instantly pauses if block data inventory hits zero mid-air
 		if blockTrackValueInstance and blockTrackValueInstance.Value <= 0 then
@@ -630,7 +636,7 @@ btnBuild.MouseButton1Click:Connect(function()
 		local pCF, hCF = CFrame.lookAt(targetPlacementPos, selectedCenterPos), CFrame.new(targetPlacementPos) * CFrame.Angles(0, angle, 0)
 		local initialChildren = folder:GetChildren()
 		
-		-- PASSES USER'S EXACT LIVE INVENTORY COUNT DIRECTLY INTO THE REMOTE CALL NUMBER PARAMETER
+		-- PASSES USER'S EXACT LIVE INVENTORY COUNT DIRECTLY INTO THE REMOTE CALL PARAMETER
 		bRF:InvokeServer(selectedBlockString, blockTrackValueInstance.Value, Instance.new("Part", nil), pCF, true, hCF, false)
 		
 		local dynamicBlockPath, retries = nil, 0
