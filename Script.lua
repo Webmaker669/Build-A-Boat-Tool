@@ -495,16 +495,23 @@ uiData.LocalPlayer = LocalPlayer
 -- // END OF FILE: Part_3_Physics.lua //
 
 -- =============================================================================
--- PART 4: COMPREHENSIVE SELECTION MENU SLIDER & LOCAL PLAYER INVENTORY DATA
+-- PART 4: DATA FIELD SYNCHRONIZATION & QUANTITY SYSTEM TRACKING
 -- =============================================================================
 local Players = game:GetService("Players")
 local LocalPlayer = Players.LocalPlayer
+
+-- Loop to wait up to 10 seconds for Part 1 to initialize the shared dictionary table
+local retries = 0
+while (not _G.CircleBuilderUI_SharedData or not _G.CircleBuilderUI_SharedData.inputBlockType) and retries < 100 do
+	task.wait(0.1)
+	retries = retries + 1
+end
 
 local uiData = _G.CircleBuilderUI_SharedData
 local colorData = _G.ActiveCircleBuilderColorData
 
 if not uiData or not uiData.inputBlockType then 
-	error("Sequence Interrupted: Run Part 3 first.") 
+	error("Sequence Interrupted: Part 1 UI elements failed to initialize in time.") 
 end
 
 local MainFrame = uiData.MainFrame
@@ -518,13 +525,13 @@ local HelpPanel = uiData.HelpPanel
 
 local dataFolder = LocalPlayer:WaitForChild("Data", 5)
 
--- FIX: Re-padded lower action buttons cleanly downwards so nothing overlaps your text boxes
-statusLabel.Position = UDim2.new(0, 15, 0, 345)
-btnSelect.Position = UDim2.new(0, 15, 0, 385)
-btnPreview.Position = UDim2.new(0, 15, 0, 428)
-btnBuild.Position = UDim2.new(0, 15, 0, 471)
+-- Perfect pixel offsets to completely stop text labels from overlapping
+statusLabel.Position = UDim2.new(0, 15, 0, 310)
+btnSelect.Position = UDim2.new(0, 15, 0, 345)
+btnPreview.Position = UDim2.new(0, 15, 0, 388)
+btnBuild.Position = UDim2.new(0, 15, 0, 431)
 
--- NEW/RESTORED: Material Selector window container pane that behaves exactly like the help panel side panels
+-- Material Selector side window frame component matching operational manual panels
 local BlockPanel = Instance.new("Frame", MainFrame)
 BlockPanel.Name = "BlockSelectionPanel"
 BlockPanel.Size = UDim2.new(0, 240, 1, 0)
@@ -556,7 +563,7 @@ local UIListLayout = Instance.new("UIListLayout", ScrollingFrame)
 UIListLayout.Padding = UDim.new(0, 4)
 UIListLayout.SortOrder = Enum.SortOrder.Name
 
--- Clicking inside the Active Block Type text field box will now slide out the popup selection menu instantly!
+-- Connect click events onto the text box element itself to trigger selection side-menu
 inputBlockType.Focused:Connect(function()
 	ColorPanel.Visible = false
 	HelpPanel.Visible = false
@@ -570,8 +577,8 @@ local function updateInventoryLayout()
 		end
 	end
 	
+	if not dataFolder then return end
 	for _, item in ipairs(dataFolder:GetChildren()) do
-		-- Only display items that have a balance higher than 0, filtering out tools
 		if item:IsA("ValueBase") and item.Value > 0 then
 			if string.find(item.Name, "Tool") then
 				continue
@@ -588,7 +595,38 @@ local function updateInventoryLayout()
 			itemBtn.BorderSizePixel = 0
 			Instance.new("UICorner", itemBtn).CornerRadius = UDim.new(0, 4)
 			
-			item
+			itemBtn.MouseButton1Click:Connect(function()
+				inputBlockType.Text = item.Name
+				BlockPanel.Visible = false
+				updateInventoryLayout()
+				if uiData.updateRealtimeVisualizerRing then
+					uiData.updateRealtimeVisualizerRing()
+				end
+			end)
+		end
+	end
+end
+
+if dataFolder then
+	updateInventoryLayout()
+	dataFolder.ChildAdded:Connect(updateInventoryLayout)
+	for _, item in ipairs(dataFolder:GetChildren()) do
+		if item:IsA("ValueBase") then
+			item.Changed:Connect(function()
+				if inputBlockType.Text == item.Name and item.Value <= 0 then
+					inputBlockType.Text = "PlasticBlock"
+				end
+				updateInventoryLayout()
+			end)
+		end
+	end
+end
+
+-- Export parameters globally so Part 5 can instantly register them without cutting connections
+uiData.BlockPanel = BlockPanel
+uiData.dataFolder = dataFolder
+
+-- // END OF FILE: Part_4_Tracking.lua //
 
 -- =============================================================================
 -- PART 5: RAYCAST TARGET LOCKS & SERVER PLACEMENT NETWORK PIPES
@@ -598,11 +636,18 @@ local LocalPlayer = Players.LocalPlayer
 local Mouse = LocalPlayer:GetMouse()
 local RunService = game:GetService("RunService")
 
+-- Loop to wait up to 10 seconds for Part 4 to finish data mappings
+local retries = 0
+while (not _G.CircleBuilderUI_SharedData or not _G.CircleBuilderUI_SharedData.dataFolder) and retries < 100 do
+	task.wait(0.1)
+	retries = retries + 1
+end
+
 local uiData = _G.CircleBuilderUI_SharedData
 local colorData = _G.ActiveCircleBuilderColorData
 
 if not uiData or not uiData.dataFolder then 
-	error("Sequence Interrupted: Run Part 4 first.") 
+	error("Sequence Interrupted: Part 4 initialization dependencies missing.") 
 end
 
 local inputRadius = uiData.inputRadius
@@ -661,7 +706,7 @@ btnBuild.MouseButton1Click:Connect(function()
 	if isSelecting or not selectedCenterPos then return end
 	
 	local selectedBlockString = tostring(inputBlockType.Text)
-	local blockTrackValueInstance = dataFolder:FindFirstChild(selectedBlockString)
+	local blockTrackValueInstance = dataFolder and dataFolder:FindFirstChild(selectedBlockString)
 	
 	-- Fail sequence gracefully if total inventory metrics show 0 parts left
 	if not blockTrackValueInstance or (blockTrackValueInstance:IsA("ValueBase") and blockTrackValueInstance.Value <= 0) then
