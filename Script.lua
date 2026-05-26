@@ -15,7 +15,7 @@ ScreenGui.Name = "CircleBuilderUI"
 ScreenGui.ResetOnSpawn = false
 
 local MainFrame = Instance.new("Frame", ScreenGui)
-MainFrame.Size = UDim2.new(0, 330, 0, 520)
+MainFrame.Size = UDim2.new(0, 330, 0, 460)
 MainFrame.Position = UDim2.new(0.05, 0, 0.15, 0)
 MainFrame.BackgroundColor3 = Color3.fromRGB(28, 28, 32)
 MainFrame.BorderSizePixel = 0
@@ -27,14 +27,14 @@ Instance.new("UICorner", MainFrame).CornerRadius = UDim.new(0, 12)
 -- Header Styling
 local Title = Instance.new("TextLabel", MainFrame)
 Title.Size = UDim2.new(1, 0, 0, 45)
-Title.Text = "⭕ CIRCLE ENGINE PRO"
+Title.Text = "⭕ AUTO-SMOOTH CIRCLE ENGINE"
 Title.TextColor3 = Color3.fromRGB(255, 255, 255)
-Title.TextSize = 15
+Title.TextSize = 14
 Title.Font = Enum.Font.GothamBold
 Title.BackgroundColor3 = Color3.fromRGB(38, 38, 44)
 Instance.new("UICorner", Title).CornerRadius = UDim.new(0, 12)
 
--- Workspace Active Visual Elements Instantiations
+-- Active Preview Containers
 local previewFolder = Instance.new("Folder", CoreGui)
 previewFolder.Name = "CirclePreviewFolder"
 
@@ -42,14 +42,12 @@ local selectionBox = Instance.new("SelectionBox", CoreGui)
 selectionBox.Color3 = Color3.fromRGB(0, 255, 255)
 selectionBox.LineThickness = 0.04
 
--- Memory Storage Pointer Structs
+-- Global States
 local selectedCenterPos = nil
 local blockName = "PlasticBlock"
 local isSelecting = false
 local currentColor = Color3.new(1, 1, 1)
-local useAutoSmooth = true
 
--- Pre-compiled Color Matrices Array
 local colorPalette = {
     Color3.fromRGB(255, 255, 255), Color3.fromRGB(255, 50, 50), 
     Color3.fromRGB(50, 255, 50), Color3.fromRGB(50, 100, 255), 
@@ -58,8 +56,8 @@ local colorPalette = {
 }
 local currentColorIndex = 1
 
--- Input Generation Helper Pipeline
-local function createInputField(labelText, yPos, defaultValue)
+-- Fields Factory
+local function createInputField(labelText, yPos, defaultValue, editable)
     local label = Instance.new("TextLabel", MainFrame)
     label.Size = UDim2.new(0, 140, 0, 28)
     label.Position = UDim2.new(0, 15, 0, yPos)
@@ -74,63 +72,27 @@ local function createInputField(labelText, yPos, defaultValue)
     box.Size = UDim2.new(0, 140, 0, 28)
     box.Position = UDim2.new(0, 165, 0, yPos)
     box.Text = defaultValue
-    box.TextColor3 = Color3.fromRGB(255, 255, 255)
+    box.TextColor3 = editable and Color3.fromRGB(255, 255, 255) or Color3.fromRGB(120, 120, 125)
     box.BackgroundColor3 = Color3.fromRGB(44, 44, 50)
     box.BorderSizePixel = 0
     box.Font = Enum.Font.GothamSemibold
     box.TextSize = 13
+    box.TextEditable = editable
     Instance.new("UICorner", box).CornerRadius = UDim.new(0, 5)
     
     return box
 end
 
-local inputRadius = createInputField("Circle Radius:", 60, "20")
-local inputSizeX  = createInputField("Block Width (X):", 100, "2")
-local inputSizeY  = createInputField("Block Height (Y):", 140, "2")
-local inputSizeZ  = createInputField("Block Depth (Z):", 180, "4")
+-- X and Z are locked to manual inputs, only Radius and Height (Y) can be modified
+local inputRadius = createInputField("Circle Radius / Range:", 60, "20", true)
+local inputSizeY  = createInputField("Block Height (Y Slider):", 100, "2", true)
+local inputSizeX  = createInputField("Block Width (Auto X):", 140, "Auto-Sizing", false)
+local inputSizeZ  = createInputField("Block Depth (Auto Z):", 180, "Auto-Sizing", false)
 
--- Auto Smooth Toggle Configurations
-local smoothLabel = Instance.new("TextLabel", MainFrame)
-smoothLabel.Size = UDim2.new(0, 180, 0, 30)
-smoothLabel.Position = UDim2.new(0, 15, 0, 220)
-smoothLabel.Text = "Auto-Smooth Width (X):"
-smoothLabel.TextColor3 = Color3.fromRGB(190, 190, 195)
-smoothLabel.TextSize = 13
-smoothLabel.TextXAlignment = Enum.TextXAlignment.Left
-smoothLabel.BackgroundTransparency = 1
-smoothLabel.Font = Enum.Font.Gotham
-
-local btnSmoothToggle = Instance.new("TextButton", MainFrame)
-btnSmoothToggle.Size = UDim2.new(0, 100, 0, 26)
-btnSmoothToggle.Position = UDim2.new(0, 205, 0, 222)
-btnSmoothToggle.Text = "ENABLED"
-btnSmoothToggle.Font = Enum.Font.GothamBold
-btnSmoothToggle.TextSize = 11
-btnSmoothToggle.BackgroundColor3 = Color3.fromRGB(46, 139, 87)
-btnSmoothToggle.TextColor3 = Color3.new(1, 1, 1)
-Instance.new("UICorner", btnSmoothToggle).CornerRadius = UDim.new(0, 5)
-
-btnSmoothToggle.MouseButton1Click:Connect(function()
-    useAutoSmooth = not useAutoSmooth
-    if useAutoSmooth then
-        btnSmoothToggle.Text = "ENABLED"
-        btnSmoothToggle.BackgroundColor3 = Color3.fromRGB(46, 139, 87)
-        inputSizeX.TextEditable = false
-        inputSizeX.TextColor3 = Color3.fromRGB(100, 100, 100)
-    else
-        btnSmoothToggle.Text = "DISABLED"
-        btnSmoothToggle.BackgroundColor3 = Color3.fromRGB(150, 50, 50)
-        inputSizeX.TextEditable = true
-        inputSizeX.TextColor3 = Color3.fromRGB(255, 255, 255)
-    end
-end)
-inputSizeX.TextEditable = false
-inputSizeX.TextColor3 = Color3.fromRGB(100, 100, 100)
-
--- Interactive Color Picker Setup Interface
+-- Color Field Instantiation
 local colorLabel = Instance.new("TextLabel", MainFrame)
 colorLabel.Size = UDim2.new(0, 140, 0, 30)
-colorLabel.Position = UDim2.new(0, 15, 0, 260)
+colorLabel.Position = UDim2.new(0, 15, 0, 230)
 colorLabel.Text = "Active Build Color:"
 colorLabel.TextColor3 = Color3.fromRGB(190, 190, 195)
 colorLabel.TextSize = 13
@@ -140,7 +102,7 @@ colorLabel.Font = Enum.Font.Gotham
 
 local btnColorPicker = Instance.new("TextButton", MainFrame)
 btnColorPicker.Size = UDim2.new(0, 140, 0, 28)
-btnColorPicker.Position = UDim2.new(0, 165, 0, 260)
+btnColorPicker.Position = UDim2.new(0, 165, 0, 230)
 btnColorPicker.Text = "◽ Pure White"
 btnColorPicker.Font = Enum.Font.GothamBold
 btnColorPicker.TextSize = 12
@@ -152,19 +114,15 @@ btnColorPicker.MouseButton1Click:Connect(function()
     currentColorIndex = (currentColorIndex % #colorPalette) + 1
     currentColor = colorPalette[currentColorIndex]
     btnColorPicker.BackgroundColor3 = currentColor
-    if currentColor.R + currentColor.G + currentColor.B < 1.5 then
-        btnColorPicker.TextColor3 = Color3.new(1, 1, 1)
-    else
-        btnColorPicker.TextColor3 = Color3.new(0, 0, 0)
-    end
+    btnColorPicker.TextColor3 = (currentColor.R + currentColor.G + currentColor.B < 1.5) and Color3.new(1, 1, 1) or Color3.new(0, 0, 0)
     btnColorPicker.Text = "Color Chosen"
 end)
 
--- Status Updates Output Container
+-- Readout Updates Label
 local statusLabel = Instance.new("TextLabel", MainFrame)
 statusLabel.Size = UDim2.new(1, -30, 0, 30)
-statusLabel.Position = UDim2.new(0, 15, 0, 305)
-statusLabel.Text = "Center Position Status: NOT SET"
+statusLabel.Position = UDim2.new(0, 15, 0, 275)
+statusLabel.Text = "Center Target Block: NOT CHOSEN"
 statusLabel.TextColor3 = Color3.fromRGB(240, 90, 90)
 statusLabel.TextSize = 12
 statusLabel.Font = Enum.Font.GothamSemibold
@@ -184,22 +142,27 @@ local function createButton(text, yPos, color)
     return btn
 end
 
-local btnSelect = createButton("🎯 CHOOSE CENTER PIECE", 345, Color3.fromRGB(0, 122, 215))
-local btnBuild  = createButton("🚀 COMMENCE RING GENERATION", 400, Color3.fromRGB(46, 139, 87))
+local btnSelect = createButton("🎯 CHOOSE CENTER PIECE", 315, Color3.fromRGB(0, 122, 215))
+local btnBuild  = createButton("🚀 COMMENCE RING GENERATION", 370, Color3.fromRGB(46, 139, 87))
 
--- Render Loop Processing Engine for 3D Realtime Previews
+-- Automated Proportional Matrix Engine with 3D Preview Generation
 local function updateRealtimeVisualizerRing()
     previewFolder:ClearAllChildren()
     if not selectedCenterPos then return end
     
     local radius = tonumber(inputRadius.Text) or 20
-    local sizeX  = tonumber(inputSizeX.Text) or 2
     local sizeY  = tonumber(inputSizeY.Text) or 2
-    local sizeZ  = tonumber(inputSizeZ.Text) or 4
     
+    -- AUTOMATIC STRUCTURAL MATH FOR X AND Z
+    -- Dynamically scales part depth (Z) and connection width (X) to stay smooth based on radius size
+    local steps = math.clamp(math.floor(2 * math.pi * radius / 3), 12, 200)
     local circumference = 2 * math.pi * radius
-    local steps = math.floor(circumference / sizeZ)
-    if useAutoSmooth then sizeX = circumference / steps end
+    local sizeZ = circumference / steps
+    local sizeX = (2 * radius * math.tan(math.pi / steps)) + 0.02 -- Perfect edge matching math offset
+    
+    -- Push calculations out to locked labels for verification
+    inputSizeX.Text = string.format("%.3f", sizeX)
+    inputSizeZ.Text = string.format("%.3f", sizeZ)
     
     for i = 1, steps do
         local angle = (i / steps) * math.pi * 2
@@ -220,12 +183,11 @@ local function updateRealtimeVisualizerRing()
     end
 end
 
-for _, box in ipairs({inputRadius, inputSizeX, inputSizeY, inputSizeZ}) do
-    box:GetPropertyChangedSignal("Text"):Connect(updateRealtimeVisualizerRing)
-end
+inputRadius:GetPropertyChangedSignal("Text"):Connect(updateRealtimeVisualizerRing)
+inputSizeY:GetPropertyChangedSignal("Text"):Connect(updateRealtimeVisualizerRing)
 btnColorPicker:GetPropertyChangedSignal("BackgroundColor3"):Connect(updateRealtimeVisualizerRing)
 
--- Raycasting Mouse Selection Processing Logic
+-- Interactive Workspace Selector
 local renderConnection, clickConnection
 btnSelect.MouseButton1Click:Connect(function()
     if isSelecting then return end
@@ -256,18 +218,17 @@ btnSelect.MouseButton1Click:Connect(function()
     end)
 end)
 
--- Main Remote Network Placement Pipeline
+-- Real-Time Server Processing Execution Pipeline Loops
 btnBuild.MouseButton1Click:Connect(function()
     if isSelecting or not selectedCenterPos then return end
     
     local radius = tonumber(inputRadius.Text) or 20
-    local manualX = tonumber(inputSizeX.Text) or 2
     local sizeY  = tonumber(inputSizeY.Text) or 2
-    local sizeZ  = tonumber(inputSizeZ.Text) or 4
     
+    local steps = math.clamp(math.floor(2 * math.pi * radius / 3), 12, 200)
     local circumference = 2 * math.pi * radius
-    local steps = math.floor(circumference / sizeZ)
-    local sizeX = useAutoSmooth and (circumference / steps) or manualX
+    local sizeZ = circumference / steps
+    local sizeX = (2 * radius * math.tan(math.pi / steps)) + 0.02
     
     local function findRemote(toolName)
         local tool = LocalPlayer.Backpack:FindFirstChild(toolName) or (LocalPlayer.Character and LocalPlayer.Character:FindFirstChild(toolName))
@@ -302,7 +263,6 @@ btnBuild.MouseButton1Click:Connect(function()
         
         local initialChildren = playerBlocksFolder:GetChildren()
         
-        -- Virtual Part Placement Invoke Pass
         local placeArgs = { blockName, 8001, Instance.new("Part", nil), placementCFrame, true, hitPositionCFrame, false }
         buildingRF:InvokeServer(unpack(placeArgs))
         
@@ -316,14 +276,12 @@ btnBuild.MouseButton1Click:Connect(function()
         end
         
         if dynamicBlockPath then
-            -- Set custom block scale dimensions
             local targetSize = Vector3.new(sizeX, sizeY, sizeZ)
             local scaleVector = (vector and vector.create) and vector.create(targetSize.X, targetSize.Y, targetSize.Z) or targetSize
             local scaleArgs = { dynamicBlockPath, scaleVector, placementCFrame }
             scalingRF:InvokeServer(unpack(scaleArgs))
             task.wait(0.01)
             
-            -- Set custom block color properties
             local paintArgs = { { { dynamicBlockPath, currentColor }, { dynamicBlockPath, currentColor }, { dynamicBlockPath, currentColor } } }
             paintingRF:InvokeServer(unpack(paintArgs))
         end
