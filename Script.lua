@@ -590,7 +590,7 @@ local function updateInventoryLayout()
 			
 			item
 
-			-- =============================================================================
+-- =============================================================================
 -- PART 5: RAYCAST TARGET LOCKS & SERVER PLACEMENT NETWORK PIPES
 -- =============================================================================
 local Players = game:GetService("Players")
