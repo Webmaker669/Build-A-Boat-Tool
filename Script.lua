@@ -10,7 +10,7 @@ local uC = true
 local showPrev = false
 local isMinimized = false
 
-local playerFolder = workspace:WaitForChild("Blocks"):WaitForChild(Player.Name)
+local blocksFolder = workspace:WaitForChild("Blocks")
 local previewFolder = Instance.new("Folder", workspace)
 previewFolder.Name = "CircleHologram"
 
@@ -85,7 +85,7 @@ hb.InputChanged:Connect(function(i)
     end
 end)
 
-UIS.InputChanged:Connect(function(i)
+UserInputService.InputChanged:Connect(function(i)
     if i == dInp and drag then
         local d = i.Position - dStart
         local xO = sPos.X.Offset + d.X
@@ -309,11 +309,21 @@ bD.MouseButton1Click:Connect(function()
     local gID = "R_" .. tostring(os.time())
     local rS = 0
     
+    -- Global scanner to capture newly spawned instances anywhere in the folder tree
+    local newlySpawnedBlock = nil
+    local listener = blocksFolder.DescendantAdded:Connect(function(descendant)
+        if descendant:IsA("Part") and descendant.Name == "PlasticBlock" then
+            newlySpawnedBlock = descendant
+        end
+    end)
+    
     for i = 1, nB do
         local a = (i / nB) * (2 * math.pi)
         local cosA = math.cos(a) * r
         local sinA = math.sin(a) * r
         local bP = cCF * CFrame.new(cosA, 0, sinA) * CFrame.Angles(0, -a, 0)
+        
+        newlySpawnedBlock = nil
         
         local t1 = Player.Backpack:FindFirstChild("BuildingTool") or ch:FindFirstChild("BuildingTool")
         if t1 then
@@ -323,34 +333,43 @@ bD.MouseButton1Click:Connect(function()
             t1:WaitForChild("RF"):InvokeServer("PlasticBlock", 8001, wZ, rot, true, bP, false)
             rS = rS + 1
         end
-        task.wait(0.05)
         
-        local pB = playerFolder:FindFirstChild("PlasticBlock")
-        local t2 = Player.Backpack:FindFirstChild("ScalingTool") or ch:FindFirstChild("ScalingTool")
-        if pB and t2 then
-            h:EquipTool(t2)
-            pB.Name = gID
-            t2:WaitForChild("RF"):InvokeServer(pB, Vector3.new(sX, sY, sZ), bP)
-            rS = rS + 1
-        end
-        task.wait(0.05)
+        -- Active frame scanner loop (prevents script from hanging if server lags)
+        local scanTime = os.clock()
+        repeat task.wait() until newlySpawnedBlock or (os.clock() - scanTime > 0.5)
         
-        if uC then
-            local t3 = Player.Backpack:FindFirstChild("PaintingTool") or ch:FindFirstChild("PaintingTool")
-            if pB and t3 then
-                h:EquipTool(t3)
-                t3:WaitForChild("RF"):InvokeServer({{{pB, cP.BackgroundColor3}}})
+        if newlySpawnedBlock then
+            local targetBlock = newlySpawnedBlock
+            targetBlock.Name = gID
+            
+            local t2 = Player.Backpack:FindFirstChild("ScalingTool") or ch:FindFirstChild("ScalingTool")
+            if t2 then
+                h:EquipTool(t2)
+                t2:WaitForChild("RF"):InvokeServer(targetBlock, Vector3.new(sX, sY, sZ), bP)
                 rS = rS + 1
             end
-            task.wait(0.05)
+            task.wait(0.04)
+            
+            if uC then
+                local t3 = Player.Backpack:FindFirstChild("PaintingTool") or ch:FindFirstChild("PaintingTool")
+                if t3 then
+                    h:EquipTool(t3)
+                    t3:WaitForChild("RF"):InvokeServer({{{targetBlock, cP.BackgroundColor3}}})
+                    rS = rS + 1
+                end
+                task.wait(0.04)
+            end
         end
+        
         h:UnequipTools()
         if rS >= 15 then
             task.wait(0.5)
             rS = 0
         end
     end
-    for _, b in ipairs(playerFolder:GetChildren()) do
+    
+    listener:Disconnect()
+    for _, b in ipairs(blocksFolder:GetDescendants()) do
         if b.Name == gID then
             b.Name = "PlasticBlock"
         end
