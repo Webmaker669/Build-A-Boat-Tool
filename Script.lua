@@ -27,17 +27,13 @@ Instance.new("UICorner", ReopenButton).CornerRadius = UDim.new(0, 6)
 
 local Title = Instance.new("TextLabel", MainFrame)
 Title.Size = UDim2.new(1, 0, 0, 45)
-Title.Text = "CIRCLE BUILDER SUITE"
+Title.Text = "   CIRCLE BUILDER SUITE"
 Title.TextColor3 = Color3.fromRGB(255, 255, 255)
 Title.TextSize = 12
 Title.Font = Enum.Font.GothamBold
 Title.BackgroundColor3 = Color3.fromRGB(38, 38, 44)
 Title.TextXAlignment = Enum.TextXAlignment.Left
-Title.TextPadding = ClientPadding or BoxPadding and Rect.new(15, 0, 0, 0) or Instance.new("UITextSizeConstraint") -- Native padding block override
 Instance.new("UICorner", Title).CornerRadius = UDim.new(0, 12)
-
--- Workaround text padding insertion to move text left away from buttons manually
-Title.Text = "   CIRCLE BUILDER SUITE"
 
 local CloseBtn = Instance.new("TextButton", MainFrame)
 CloseBtn.Size = UDim2.new(0, 30, 0, 30)
@@ -97,7 +93,7 @@ _G.CircleBuilderUI_SharedData = {
 }
 
 local uiData = _G.CircleBuilderUI_SharedData
-if not uiData or not uiData.MainFrame then error("Run Part 1 first.") end
+if not uiData or not uiData.MainFrame then error("Execute Part 1 before running this block.") end
 local MainFrame = uiData.MainFrame
 
 local colorLabel = Instance.new("TextLabel", MainFrame)
@@ -113,7 +109,7 @@ colorLabel.Font = Enum.Font.Gotham
 local btnColorPicker = Instance.new("TextButton", MainFrame)
 btnColorPicker.Size = UDim2.new(0, 130, 0, 28)
 btnColorPicker.Position = UDim2.new(0, 175, 0, 260)
-btnColorPicker.Text = "" -- FIXED: Removed the baseline text name completely to only display color fill shifts
+btnColorPicker.Text = ""
 btnColorPicker.Font = Enum.Font.GothamBold
 btnColorPicker.BackgroundColor3 = Color3.new(1, 1, 1)
 Instance.new("UICorner", btnColorPicker).CornerRadius = UDim.new(0, 5)
@@ -145,7 +141,6 @@ local btnSelect  = createButton("Select Center Target Block", 335, Color3.fromRG
 local btnPreview = createButton("Hologram Preview Configuration: Disabled", 376, Color3.fromRGB(110, 110, 115))
 local btnBuild   = createButton("Commence Circle Construction", 417, Color3.fromRGB(46, 139, 87))
 
--- Professional Anti-Blur Text Container Layouts
 local HelpPanel = Instance.new("Frame", MainFrame)
 HelpPanel.Name = "HelpSelectionPanel"
 HelpPanel.Size = UDim2.new(0, 270, 1, 0)
@@ -171,7 +166,7 @@ HelpText.Text = "<b>1. Configuration Settings:</b>\nInput your circle size range
 HelpText.TextColor3 = Color3.fromRGB(210, 210, 215)
 HelpText.TextSize = 12
 HelpText.Font = Enum.Font.SourceSans
-HelpText.RichText = true -- FIXED: Bypasses anti-aliasing blurring artifacts on scaling text strings
+HelpText.RichText = true
 HelpText.TextWrapped = true
 HelpText.TextYAlignment = Enum.TextYAlignment.Top
 HelpText.TextXAlignment = Enum.TextXAlignment.Left
@@ -204,7 +199,7 @@ Instance.new("UICorner", ColorIndicator).CornerRadius = UDim.new(0, 5)
 
 local IndicatorText = Instance.new("TextLabel", ColorIndicator)
 IndicatorText.Size = UDim2.new(1, 0, 1, 0)
-IndicatorText.Text = "" -- FIXED: Stripped textual labels inside the swatch box
+IndicatorText.Text = ""
 IndicatorText.BackgroundTransparency = 1
 
 local function createColorSlider(channelName, yPos, defaultFraction)
@@ -278,7 +273,6 @@ local hexBox = uiData.hexBox local rLabel, rTrack, rBtn = uiData.rLabel, uiData.
 local gLabel, gTrack, gBtn = uiData.gLabel, uiData.gTrack, uiData.gBtn
 local bLabel, bTrack, bBtn = uiData.bLabel, uiData.bTrack, uiData.bBtn
 
--- Modern Discord Interactive Link Footer Implementation
 local DiscordBtn = Instance.new("TextButton", MainFrame)
 DiscordBtn.Size = UDim2.new(1, -30, 0, 32)
 DiscordBtn.Position = UDim2.new(0, 15, 1, -45)
@@ -290,8 +284,7 @@ DiscordBtn.TextSize = 11
 Instance.new("UICorner", DiscordBtn).CornerRadius = UDim.new(0, 6)
 
 DiscordBtn.MouseButton1Click:Connect(function()
-    local targetUrl = "https://discord.gg/X2TGfeUacY"
-    -- Dynamic environment hook execution lookup
+    local targetUrl = "https://discord.gg"
     local clipboardFunc = setclipboard or toclipboard or (Clipboard and Clipboard.set)
     if clipboardFunc then
         clipboardFunc(targetUrl)
