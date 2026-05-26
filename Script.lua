@@ -62,9 +62,13 @@ end
 
 iR:GetPropertyChangedSignal("Text"):Connect(uP) iB:GetPropertyChangedSignal("Text"):Connect(uP) iY:GetPropertyChangedSignal("Text"):Connect(uP) iC:GetPropertyChangedSignal("Text"):Connect(parseColor)
 
+-- Crash-Proofed Color Spectrum Mouse Sampling Math
 local sampling = false
 local function sampleColor()
+    if not cW or not mP then return end
     local absPos, absSize = cW.AbsolutePosition, cW.AbsoluteSize
+    if not absPos or not absSize or not mP.X then return end -- Extra validation safety check
+    
     local mouseX = math.clamp(mP.X - absPos.X, 0, absSize.X)
     local hue = mouseX / absSize.X
     local selectedColor = Color3.fromHSV(hue, 0.9, 0.9)
@@ -109,7 +113,6 @@ bD.MouseButton1Click:Connect(function()
         local t1 = P.Backpack:FindFirstChild("BuildingTool") or ch:FindFirstChild("BuildingTool")
         if t1 then h:EquipTool(t1) t1:WaitForChild("RF"):InvokeServer("PlasticBlock", 8001, workspace:WaitForChild("WhiteZone"), CFrame.new(-10, 6.1, -20) * CFrame.Angles(0,-a,0), true, bP, false) end
         
-        -- Increased delay to give the server breathing room and avoid HTTP 429
         task.wait(0.04)
         
         -- 2. Scale
