@@ -505,7 +505,7 @@ local RunService = uiData.RunService
 local LocalPlayer = uiData.LocalPlayer
 
 local isSelecting = false
-local blockName = "PlasticBlock"
+local blockName = "WoodBlock"
 
 btnSelect.MouseButton1Click:Connect(function()
 	if isSelecting then return end
