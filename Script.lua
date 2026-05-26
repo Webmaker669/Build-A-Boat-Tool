@@ -92,7 +92,8 @@ local inputSizeZ  = createInputField("Calculated Depth (Z):", 220, "0.00", false
 _G.CircleBuilderSuitePro_V2 = {
     MainFrame = MainFrame, inputRadius = inputRadius, inputSteps = inputSteps,
     inputSizeY = inputSizeY, inputSizeX = inputSizeX, inputSizeZ = inputSizeZ,
-    CloseBtn = CloseBtn, HelpBtn = HelpBtn, ReopenButton = ReopenButton
+    CloseBtn = CloseBtn, HelpBtn = HelpBtn, ReopenButton = ReopenButton,
+    showLivePreview = false, currentColor = Color3.new(1, 1, 1) -- Global state baseline registry
 }
 
 -- // END OF FILE: Part_1_UI_Base.lua // --
@@ -253,6 +254,7 @@ hexBox.Font = Enum.Font.GothamSemibold
 hexBox.TextSize = 12
 Instance.new("UICorner", hexBox).CornerRadius = UDim.new(0, 5)
 
+-- FIXED: Explicit pointer storage mapping so Part 3 & 4 can find these references cleanly
 uiData.btnColorPicker = btnColorPicker uiData.statusLabel = statusLabel
 uiData.btnSelect = btnSelect uiData.btnPreview = btnPreview uiData.btnBuild = btnBuild
 uiData.ColorIndicator = ColorIndicator uiData.IndicatorText = IndicatorText
@@ -316,8 +318,8 @@ if workspace:FindFirstChild("CirclePreviewFolder") then workspace.CirclePreviewF
 local previewFolder = Instance.new("Folder", workspace) previewFolder.Name = "CirclePreviewFolder"
 local selectionBox = Instance.new("SelectionBox", CoreGui) selectionBox.Color3 = Color3.fromRGB(0, 255, 255) selectionBox.LineThickness = 0.04
 
-local selectedCenterPos = nil local isSelecting = false local showLivePreview = false
-local currentR, currentG, currentB = 1, 1, 1 local currentColor = Color3.new(1, 1, 1)
+-- FIXED: Link local physics variables directly to global persistent shared matrix states
+local currentR, currentG, currentB = 1, 1, 1
 
 CloseBtn.MouseButton1Click:Connect(function() MainFrame.Visible = false ReopenButton.Visible = true ColorPanel.Visible = false HelpPanel.Visible = false end)
 ReopenButton.MouseButton1Click:Connect(function() MainFrame.Visible = true ReopenButton.Visible = false end)
@@ -330,20 +332,34 @@ local function updateRealtimeVisualizerRing()
     local radius = tonumber(inputRadius.Text) or 20 local steps = tonumber(inputSteps.Text) or 30 local sizeY = tonumber(inputSizeY.Text) or 2
     local circumference = 2 * math.pi * radius local sizeZ = circumference / steps local sizeX = (2 * radius * math.tan(math.pi / steps)) + 0.02
     inputSizeX.Text, inputSizeZ.Text = string.format("%.3f", sizeX), string.format("%.3f", sizeZ)
-    if not selectedCenterPos or not showLivePreview then return end
+    
+    if not uiData.selectedCenterPos or not uiData.showLivePreview then return end
+    
     for i = 1, steps do
         local angle = (i / steps) * math.pi * 2
-        local targetPlacementPos = Vector3.new(selectedCenterPos.X + math.cos(angle) * radius, selectedCenterPos.Y, selectedCenterPos.Z + math.sin(angle) * radius)
-        local hPart = Instance.new("Part") hPart.Size = Vector3.new(sizeX, sizeY, sizeZ)
-        hPart.CFrame = CFrame.lookAt(targetPlacementPos, selectedCenterPos) hPart.Color = currentColor
-        hPart.Transparency = 0.5 hPart.Anchored = true hPart.CanCollide = false hPart.Material = Enum.Material.SmoothPlastic hPart.Parent = previewFolder
-        local sb = Instance.new("SelectionBox", hPart) sb.Adornee = hPart sb.Color3 = currentColor sb.LineThickness = 0.02
+        local targetPlacementPos = Vector3.new(uiData.selectedCenterPos.X + math.cos(angle) * radius, uiData.selectedCenterPos.Y, uiData.selectedCenterPos.Z + math.sin(angle) * radius)
+        
+        -- FIXED HOLOGRAM RENDERING MATRIX: Forced onto workspace layer with SelectionBox border grids
+        local hPart = Instance.new("Part") 
+        hPart.Size = Vector3.new(sizeX, sizeY, sizeZ)
+        hPart.CFrame = CFrame.lookAt(targetPlacementPos, uiData.selectedCenterPos) 
+        hPart.Color = uiData.currentColor
+        hPart.Transparency = 0.5 
+        hPart.Anchored = true 
+        hPart.CanCollide = false 
+        hPart.Material = Enum.Material.SmoothPlastic 
+        hPart.Parent = previewFolder
+        
+        local sb = Instance.new("SelectionBox", hPart) 
+        sb.Adornee = hPart 
+        sb.Color3 = uiData.currentColor 
+        sb.LineThickness = 0.02
     end
 end
 
 local function applyColorTransformations()
-    currentColor = Color3.new(currentR, currentG, currentB)
-    ColorIndicator.BackgroundColor3, btnColorPicker.BackgroundColor3 = currentColor, currentColor
+    uiData.currentColor = Color3.new(currentR, currentG, currentB)
+    ColorIndicator.BackgroundColor3, btnColorPicker.BackgroundColor3 = uiData.currentColor, uiData.currentColor
     updateRealtimeVisualizerRing()
 end
 
@@ -380,8 +396,8 @@ end)
 for _, box in ipairs({inputRadius, inputSteps, inputSizeY}) do box:GetPropertyChangedSignal("Text"):Connect(updateRealtimeVisualizerRing) end
 
 btnPreview.MouseButton1Click:Connect(function()
-    showLivePreview = not showLivePreview
-    if showLivePreview then btnPreview.Text, btnPreview.BackgroundColor3 = "Hologram Preview Configuration: Active", Color3.fromRGB(155, 80, 180)
+    uiData.showLivePreview = not uiData.showLivePreview
+    if uiData.showLivePreview then btnPreview.Text, btnPreview.BackgroundColor3 = "Hologram Preview Configuration: Active", Color3.fromRGB(155, 80, 180)
     else btnPreview.Text, btnPreview.BackgroundColor3 = "Hologram Preview Configuration: Disabled", Color3.fromRGB(110, 110, 115) end
     updateRealtimeVisualizerRing()
 end)
@@ -405,7 +421,7 @@ local previewFolder = uiData.previewFolder local btnSelect = uiData.btnSelect lo
 local ColorPanel = uiData.ColorPanel local HelpPanel = uiData.HelpPanel
 local Mouse = uiData.Mouse local RunService = uiData.RunService local LocalPlayer = uiData.LocalPlayer
 
-local selectedCenterPos = nil local isSelecting = false local blockName = "PlasticBlock"
+local isSelecting = false local blockName = "PlasticBlock"
 
 btnSelect.MouseButton1Click:Connect(function()
     if isSelecting then return end isSelecting = true
@@ -417,7 +433,8 @@ btnSelect.MouseButton1Click:Connect(function()
     clickConnection = Mouse.Button1Down:Connect(function()
         local target = Mouse.Target
         if target and target:IsA("BasePart") then
-            selectedCenterPos = target.Position statusLabel.Text = "Anchor Node Position Synchronized: " .. target.Name statusLabel.TextColor3 = Color3.fromRGB(80, 240, 80)
+            uiData.selectedCenterPos = target.Position 
+            statusLabel.Text = "Anchor Node Position Synchronized: " .. target.Name statusLabel.TextColor3 = Color3.fromRGB(80, 240, 80)
             renderConnection:Disconnect() clickConnection:Disconnect() selectionBox.Adornee = nil isSelecting = false btnSelect.Text = "Select Center Target Block"
             uiData.updateRealtimeVisualizerRing()
         end
@@ -425,36 +442,34 @@ btnSelect.MouseButton1Click:Connect(function()
 end)
 
 btnBuild.MouseButton1Click:Connect(function()
+    local selectedCenterPos = uiData.selectedCenterPos
     if isSelecting or not selectedCenterPos then return end
+    
     local radius = tonumber(inputRadius.Text) or 20 local steps = tonumber(inputSteps.Text) or 30 local sizeY = tonumber(inputSizeY.Text) or 2
     local circumference = 2 * math.pi * radius local sizeZ = circumference / steps local sizeX = (2 * radius * math.tan(math.pi / steps)) + 0.02
     local function findRemote(tName) local tl = LocalPlayer.Backpack:FindFirstChild(tName) or (LocalPlayer.Character and LocalPlayer.Character:FindFirstChild(tName)) return tl and tl:FindFirstChild("RF") end
     local bRF, sRF, pRF = findRemote("BuildingTool"), findRemote("ScalingTool"), findRemote("PaintingTool")
     if not bRF or not sRF or not pRF then statusLabel.Text, statusLabel.TextColor3 = "Hardware Fault: Missing active utilities!", Color3.fromRGB(255, 80, 80) return end
     
+    uiData.showLivePreview = false 
     btnPreview.Text, btnPreview.BackgroundColor3 = "Hologram Preview Configuration: Disabled", Color3.fromRGB(110, 110, 115) 
     previewFolder:ClearAllChildren() ColorPanel.Visible = false HelpPanel.Visible = false
     
     btnBuild.Text, btnBuild.Active = "Constructing Active Sector Matrix...", false
     local folder = workspace:WaitForChild("Blocks", 5):WaitForChild(LocalPlayer.Name, 5)
+    
     for i = 1, steps do
         local angle = (i / steps) * math.pi * 2 local targetPlacementPos = Vector3.new(selectedCenterPos.X + math.cos(angle) * radius, selectedCenterPos.Y, selectedCenterPos.Z + math.sin(angle) * radius)
         local pCF, hCF = CFrame.lookAt(targetPlacementPos, selectedCenterPos), CFrame.new(targetPlacementPos) * CFrame.Angles(0, angle, 0)
         local initialChildren = folder:GetChildren()
         bRF:InvokeServer(blockName, 8001, Instance.new("Part", nil), pCF, true, hCF, false)
+        
         local dynamicBlockPath, retries = nil, 0
         while not dynamicBlockPath and retries < 30 do
             task.wait(0.01) local currentChildren = folder:GetChildren()
             if #currentChildren > #initialChildren then dynamicBlockPath = currentChildren[#currentChildren] end retries = retries + 1
         end
+        
         if dynamicBlockPath then
             local sVec = (vector and vector.create) and vector.create(sizeX, sizeY, sizeZ) or Vector3.new(sizeX, sizeY, sizeZ)
-            sRF:InvokeServer(dynamicBlockPath, sVec, pCF) task.wait(0.01)
-            local col = uiData.btnColorPicker.BackgroundColor3 pRF:InvokeServer({{{dynamicBlockPath, col}, {dynamicBlockPath, col}, {dynamicBlockPath, col}}})
-        end
-        task.wait(0.03)
-    end
-    btnBuild.Text, btnBuild.Active = "Commence Circle Construction", true statusLabel.Text, statusLabel.TextColor3 = "Matrix Sequence Completed!", Color3.fromRGB(80, 240, 80)
-end)
-
--- // END OF FILE: Part_4_Engine.lua // --
+            sRF:InvokeServer(dynamicBlockPath, sVec, pCF) task.wait(0.0
