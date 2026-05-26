@@ -83,13 +83,13 @@ local function createInputField(labelText, yPos, defaultValue, editable)
     return box
 end
 
--- X and Z are locked to manual inputs, only Radius and Height (Y) can be modified
+-- Input box initializations
 local inputRadius = createInputField("Circle Radius / Range:", 60, "20", true)
 local inputSizeY  = createInputField("Block Height (Y Slider):", 100, "2", true)
-local inputSizeX  = createInputField("Block Width (Auto X):", 140, "Auto-Sizing", false)
-local inputSizeZ  = createInputField("Block Depth (Auto Z):", 180, "Auto-Sizing", false)
+local inputSizeX  = createInputField("Block Width (Auto X):", 140, "Calculating...", false)
+local inputSizeZ  = createInputField("Block Depth (Auto Z):", 180, "Calculating...", false)
 
--- Color Field Instantiation
+-- Color Palette Visual Configuration Options
 local colorLabel = Instance.new("TextLabel", MainFrame)
 colorLabel.Size = UDim2.new(0, 140, 0, 30)
 colorLabel.Position = UDim2.new(0, 15, 0, 230)
@@ -118,7 +118,7 @@ btnColorPicker.MouseButton1Click:Connect(function()
     btnColorPicker.Text = "Color Chosen"
 end)
 
--- Readout Updates Label
+-- Status Container Update Labels
 local statusLabel = Instance.new("TextLabel", MainFrame)
 statusLabel.Size = UDim2.new(1, -30, 0, 30)
 statusLabel.Position = UDim2.new(0, 15, 0, 275)
@@ -145,7 +145,7 @@ end
 local btnSelect = createButton("🎯 CHOOSE CENTER PIECE", 315, Color3.fromRGB(0, 122, 215))
 local btnBuild  = createButton("🚀 COMMENCE RING GENERATION", 370, Color3.fromRGB(46, 139, 87))
 
--- Automated Proportional Matrix Engine with 3D Preview Generation
+-- Geometric Preview Processor Subroutines
 local function updateRealtimeVisualizerRing()
     previewFolder:ClearAllChildren()
     if not selectedCenterPos then return end
@@ -153,14 +153,12 @@ local function updateRealtimeVisualizerRing()
     local radius = tonumber(inputRadius.Text) or 20
     local sizeY  = tonumber(inputSizeY.Text) or 2
     
-    -- AUTOMATIC STRUCTURAL MATH FOR X AND Z
-    -- Dynamically scales part depth (Z) and connection width (X) to stay smooth based on radius size
+    -- DYNAMIC AUTO-SIZING GEOMETRY MATH Engine
     local steps = math.clamp(math.floor(2 * math.pi * radius / 3), 12, 200)
     local circumference = 2 * math.pi * radius
     local sizeZ = circumference / steps
-    local sizeX = (2 * radius * math.tan(math.pi / steps)) + 0.02 -- Perfect edge matching math offset
+    local sizeX = (2 * radius * math.tan(math.pi / steps)) + 0.02
     
-    -- Push calculations out to locked labels for verification
     inputSizeX.Text = string.format("%.3f", sizeX)
     inputSizeZ.Text = string.format("%.3f", sizeZ)
     
@@ -187,7 +185,7 @@ inputRadius:GetPropertyChangedSignal("Text"):Connect(updateRealtimeVisualizerRin
 inputSizeY:GetPropertyChangedSignal("Text"):Connect(updateRealtimeVisualizerRing)
 btnColorPicker:GetPropertyChangedSignal("BackgroundColor3"):Connect(updateRealtimeVisualizerRing)
 
--- Interactive Workspace Selector
+-- Click Processing Actions Handler
 local renderConnection, clickConnection
 btnSelect.MouseButton1Click:Connect(function()
     if isSelecting then return end
@@ -218,7 +216,7 @@ btnSelect.MouseButton1Click:Connect(function()
     end)
 end)
 
--- Real-Time Server Processing Execution Pipeline Loops
+-- Remote Invoking Build Execution Operations Thread
 btnBuild.MouseButton1Click:Connect(function()
     if isSelecting or not selectedCenterPos then return end
     
@@ -240,7 +238,7 @@ btnBuild.MouseButton1Click:Connect(function()
     local paintingRF = findRemote("PaintingTool")
     
     if not buildingRF or not scalingRF or not paintingRF then
-        statusLabel.Text = "Hardware Fault: Missing active toolbar utilities!"
+        statusLabel.Text = "Hardware Fault: Missing active utilities!"
         statusLabel.TextColor3 = Color3.fromRGB(255, 80, 80)
         return
     end
@@ -290,6 +288,6 @@ btnBuild.MouseButton1Click:Connect(function()
     
     btnBuild.Text = "🚀 COMMENCE RING GENERATION"
     btnBuild.Active = true
-    statusLabel.Text = "Matrix Sequence Completed Successfully!"
+    statusLabel.Text = "Matrix Sequence Completed!"
     statusLabel.TextColor3 = Color3.fromRGB(80, 240, 80)
 end)
