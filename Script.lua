@@ -120,12 +120,10 @@ tB.MouseButton1Click:Connect(function()
     if not uC then cP.BackgroundColor3 = Color3.fromRGB(163,162,165) end uP()
 end)
 
--- The Button Click links straight to your specified raw background script URL
 bD.MouseButton1Click:Connect(function()
     if not cCF then sC.Text, sC.BackgroundColor3 = "SET CENTER FIRST!", Color3.fromRGB(180,50,50) return end
     clearHologram()
     
-    -- Inject current UI data state into global environment tracking values
     _G.CircleRadius = tonumber(iR.Text) or 30
     _G.CircleBlocks = tonumber(iB.Text) or 120
     _G.CircleHeightY = tonumber(iY.Text) or 2
@@ -135,7 +133,6 @@ bD.MouseButton1Click:Connect(function()
     _G.CircleUseColor = uC
     _G.CircleCenterCFrame = cCF
     
-    -- Load and execute the background math loop script using your permanent raw link
-    loadstring(game:HttpGet("https://raw.githubusercontent.com/Webmaker669/Build-A-Boat-Tool/refs/heads/main/CircleEngine.lua"))()
+    loadstring(game:HttpGet("https://githubusercontent.com"))()
 end)
 uP()
