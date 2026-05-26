@@ -27,7 +27,7 @@ Instance.new("UICorner", ReopenButton).CornerRadius = UDim.new(0, 6)
 
 local Title = Instance.new("TextLabel", MainFrame)
 Title.Size = UDim2.new(1, 0, 0, 45)
-Title.Text = "   CIRCLE BUILDER SUITE" -- Spaced out to prevent overlap
+Title.Text = "   CIRCLE BUILDER SUITE"
 Title.TextColor3 = Color3.fromRGB(255, 255, 255)
 Title.TextSize = 12
 Title.Font = Enum.Font.GothamBold
@@ -86,14 +86,15 @@ local inputSizeY  = createInputField("Block Height (Y):", 140, "2", true)
 local inputSizeX  = createInputField("Calculated Width (X):", 180, "0.00", false)
 local inputSizeZ  = createInputField("Calculated Depth (Z):", 220, "0.00", false)
 
-_G.CircleBuilderUI_SharedData = {
+-- FIXED: Clean global memory pointer to dump cached errors completely
+_G.CircleBuilderSuitePro_V2 = {
     MainFrame = MainFrame, inputRadius = inputRadius, inputSteps = inputSteps,
     inputSizeY = inputSizeY, inputSizeX = inputSizeX, inputSizeZ = inputSizeZ,
     CloseBtn = CloseBtn, HelpBtn = HelpBtn, ReopenButton = ReopenButton
 }
 
-local uiData = _G.CircleBuilderUI_SharedData
-if not uiData or not uiData.MainFrame then error("Execute Part 1 before running this block.") end
+local uiData = _G.CircleBuilderSuitePro_V2
+if not uiData or not uiData.MainFrame then error("Run updated Part 1 block first.") end
 local MainFrame = uiData.MainFrame
 
 local colorLabel = Instance.new("TextLabel", MainFrame)
@@ -259,8 +260,8 @@ local Players = game:GetService("Players")
 local LocalPlayer = Players.LocalPlayer
 local Mouse = LocalPlayer:GetMouse()
 
-local uiData = _G.CircleBuilderUI_SharedData
-if not uiData or not uiData.btnBuild then error("Run Part 2 first.") end
+local uiData = _G.CircleBuilderSuitePro_V2
+if not uiData or not uiData.btnBuild then error("Run updated Part 2 block first.") end
 
 local MainFrame = uiData.MainFrame local CloseBtn = uiData.CloseBtn local HelpBtn = uiData.HelpBtn local ReopenButton = uiData.ReopenButton
 local inputRadius = uiData.inputRadius local inputSteps = uiData.inputSteps
@@ -377,8 +378,8 @@ uiData.btnSelect = btnSelect uiData.statusLabel = statusLabel uiData.selectionBo
 uiData.Mouse = Mouse uiData.RunService = RunService uiData.LocalPlayer = LocalPlayer
 
 local Players = game:GetService("Players")
-local uiData = _G.CircleBuilderUI_SharedData
-if not uiData or not uiData.updateRealtimeVisualizerRing then error("Run Part 3 first.") end
+local uiData = _G.CircleBuilderSuitePro_V2
+if not uiData or not uiData.updateRealtimeVisualizerRing then error("Run updated Part 3 block first.") end
 
 local inputRadius = uiData.inputRadius local inputSteps = uiData.inputSteps local inputSizeY = uiData.inputSizeY
 local statusLabel = uiData.statusLabel local btnPreview = uiData.btnPreview local btnBuild = uiData.btnBuild
@@ -431,7 +432,7 @@ btnBuild.MouseButton1Click:Connect(function()
         if dynamicBlockPath then
             local sVec = (vector and vector.create) and vector.create(sizeX, sizeY, sizeZ) or Vector3.new(sizeX, sizeY, sizeZ)
             sRF:InvokeServer(dynamicBlockPath, sVec, pCF) task.wait(0.01)
-            local col = uiData.btnColorPicker.BackgroundColor3 pRF:InvokeServer({[[[#19]]]})
+            local col = uiData.btnColorPicker.BackgroundColor3 pRF:InvokeServer({{{dynamicBlockPath, col}, {dynamicBlockPath, col}, {dynamicBlockPath, col}}})
         end
         task.wait(0.03)
     end
