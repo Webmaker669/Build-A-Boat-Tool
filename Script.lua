@@ -1,3 +1,6 @@
+-- =============================================================================
+-- SYSTEM SETUP: WINDOW FRAME & INTERFACE CONTROLS
+-- =============================================================================
 local CoreGui = game:GetService("CoreGui")
 if CoreGui:FindFirstChild("CircleBuilderUI") then CoreGui.CircleBuilderUI:Destroy() end
 
@@ -92,6 +95,11 @@ _G.CircleBuilderSuitePro_V2 = {
     CloseBtn = CloseBtn, HelpBtn = HelpBtn, ReopenButton = ReopenButton
 }
 
+-- // END OF FILE: Part_1_UI_Base.lua // --
+
+-- =============================================================================
+-- INTERFACE LAYOUTS: SUBMENUS & OPERATION MANUALS
+-- =============================================================================
 local uiData = _G.CircleBuilderSuitePro_V2
 if not uiData or not uiData.MainFrame then error("Run Part 1 first.") end
 local MainFrame = uiData.MainFrame
@@ -253,6 +261,11 @@ uiData.gLabel = gLabel uiData.gTrack = gTrack uiData.gBtn = gBtn
 uiData.bLabel = bLabel uiData.bTrack = bTrack uiData.bBtn = bBtn
 uiData.ColorPanel = ColorPanel uiData.HelpPanel = HelpPanel
 
+-- // END OF FILE: Part_2_Submenus.lua // --
+
+-- =============================================================================
+-- INTERACTIVE SUBSYSTEMS: HOLOGRAM RESPONSIVENESS & INPUT TRACKING
+-- =============================================================================
 local CoreGui = game:GetService("CoreGui")
 local RunService = game:GetService("RunService")
 local Players = game:GetService("Players")
@@ -269,7 +282,7 @@ local btnColorPicker = uiData.btnColorPicker local statusLabel = uiData.statusLa
 local btnSelect = uiData.btnSelect local btnPreview = uiData.btnPreview local btnBuild = uiData.btnBuild
 local ColorIndicator = uiData.ColorIndicator local IndicatorText = uiData.IndicatorText
 local ColorPanel = uiData.ColorPanel local HelpPanel = uiData.HelpPanel
-local hexBox = uiData.hexBox local rLabel, rTrack, rBtn = uiData.rLabel, uiData.rTrack, uiData.rBtn
+local hexBox = uiData.hexBox local rLabel, rTrack, rBtn = uiData.rLabel, uiData.rTrack, rBtn
 local gLabel, gTrack, gBtn = uiData.gLabel, uiData.gTrack, uiData.gBtn
 local bLabel, bTrack, bBtn = uiData.bLabel, uiData.bTrack, uiData.bBtn
 
@@ -376,6 +389,11 @@ uiData.updateRealtimeVisualizerRing = updateRealtimeVisualizerRing uiData.previe
 uiData.btnSelect = btnSelect uiData.statusLabel = statusLabel uiData.selectionBox = selectionBox
 uiData.Mouse = Mouse uiData.RunService = RunService uiData.LocalPlayer = LocalPlayer
 
+-- // END OF FILE: Part_3_Physics.lua // --
+
+-- =============================================================================
+-- PLACEMENT PIPELINE: TARGET SELECTION & SERVER PLACEMENT NETWORK
+-- =============================================================================
 local Players = game:GetService("Players")
 local uiData = _G.CircleBuilderSuitePro_V2
 if not uiData or not uiData.updateRealtimeVisualizerRing then error("Run Part 3 first.") end
@@ -437,3 +455,5 @@ btnBuild.MouseButton1Click:Connect(function()
     end
     btnBuild.Text, btnBuild.Active = "Commence Circle Construction", true statusLabel.Text, statusLabel.TextColor3 = "Matrix Sequence Completed!", Color3.fromRGB(80, 240, 80)
 end)
+
+-- // END OF FILE: Part_4_Engine.lua // --
