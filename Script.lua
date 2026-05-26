@@ -1,5 +1,5 @@
 -- =============================================================================
--- MATRIX CONFIGURATION: EXTRA INTERFACE EXTENSIONS & ITEM SELECTOR
+-- MATRIX CONFIGURATION: EXPANDED WINDOW INTERFACE & MATERIAL POPUP
 -- =============================================================================
 local Players = game:GetService("Players")
 local LocalPlayer = Players.LocalPlayer
@@ -29,23 +29,26 @@ local HelpPanel = uiData.HelpPanel
 local isSelecting = false
 local dataFolder = LocalPlayer:WaitForChild("Data")
 
--- NEW: Change Material button placed directly below "Select Center Target Block"
+-- FIX: Main Frame expanded to 560px height to prevent text crowding or clipping
+MainFrame.Size = UDim2.new(0, 330, 0, 560)
+
+-- NEW: Change Material button placed perfectly below "Select Center Target Block"
 local btnChangeBlock = Instance.new("TextButton", MainFrame)
 btnChangeBlock.Size = UDim2.new(1, -30, 0, 36)
-btnChangeBlock.Position = UDim2.new(0, 15, 0, 376) -- Directly below the Select Center button
+btnChangeBlock.Position = UDim2.new(0, 15, 0, 376) 
 btnChangeBlock.Text = "Change Material: PlasticBlock"
 btnChangeBlock.TextColor3 = Color3.fromRGB(255, 255, 255)
 btnChangeBlock.TextSize = 12
 btnChangeBlock.Font = Enum.Font.GothamBold
-btnChangeBlock.BackgroundColor3 = Color3.fromRGB(155, 80, 180) -- Matching style profile
+btnChangeBlock.BackgroundColor3 = Color3.fromRGB(155, 80, 180) 
 btnChangeBlock.BorderSizePixel = 0
 Instance.new("UICorner", btnChangeBlock).CornerRadius = UDim.new(0, 6)
 
--- Shift the lower buttons downward cleanly so nothing overlaps
-btnPreview.Position = UDim2.new(0, 15, 0, 417)
-btnBuild.Position = UDim2.new(0, 15, 0, 458)
+-- FIX: Repositioned remaining operational elements with uniform structural padding
+btnPreview.Position = UDim2.new(0, 15, 0, 422)
+btnBuild.Position = UDim2.new(0, 15, 0, 468)
 
--- NEW: Block Selection Panel that behaves exactly like the Help Panel side-window
+-- NEW: Material Panel that opens horizontally on the right side (matching Help Panel geometry)
 local BlockPanel = Instance.new("Frame", MainFrame)
 BlockPanel.Name = "BlockSelectionPanel"
 BlockPanel.Size = UDim2.new(0, 240, 1, 0)
@@ -77,10 +80,11 @@ local UIListLayout = Instance.new("UIListLayout", ScrollingFrame)
 UIListLayout.Padding = UDim.new(0, 4)
 UIListLayout.SortOrder = Enum.SortOrder.Name
 
+-- FIX: Sets "PlasticBlock" as the strict initialization item token default
 _G.SelectedBuildMaterialToken = "PlasticBlock"
 
 -- =============================================================================
--- INTERFACE REFRACTION: SIDE PANEL TOGGLES & VALUE SYNCHRONIZATION
+-- INTERFACE REFRACTION: POPUP TOGGLES & INTERACTION LOCKS
 -- =============================================================================
 btnChangeBlock.MouseButton1Click:Connect(function()
 	ColorPanel.Visible = false
@@ -112,10 +116,11 @@ local function updateInventoryLayout()
 			itemBtn.BorderSizePixel = 0
 			Instance.new("UICorner", itemBtn).CornerRadius = UDim.new(0, 4)
 			
+			-- FIX: Updates the button label and sets placement material matching the clicked data folder item name
 			itemBtn.MouseButton1Click:Connect(function()
 				_G.SelectedBuildMaterialToken = item.Name
 				btnChangeBlock.Text = "Change Material: " .. item.Name
-				BlockPanel.Visible = false -- Closes panel after selection just like a regular dropdown menu
+				BlockPanel.Visible = false
 				updateInventoryLayout()
 			end)
 		end
@@ -127,6 +132,7 @@ dataFolder.ChildAdded:Connect(updateInventoryLayout)
 for _, item in ipairs(dataFolder:GetChildren()) do
 	if item:IsA("ValueBase") then
 		item.Changed:Connect(function()
+			-- FIX: Automatically falls back to default PlasticBlock if selected block value drops to 0
 			if _G.SelectedBuildMaterialToken == item.Name and item.Value <= 0 then
 				_G.SelectedBuildMaterialToken = "PlasticBlock"
 				btnChangeBlock.Text = "Change Material: PlasticBlock"
@@ -215,7 +221,7 @@ btnBuild.MouseButton1Click:Connect(function()
 		local pCF, hCF = CFrame.lookAt(targetPlacementPos, selectedCenterPos), CFrame.new(targetPlacementPos) * CFrame.Angles(0, angle, 0)
 		local initialChildren = folder:GetChildren()
 		
-		-- FIX: Passes the exact block item you clicked out of your sidebar selection menu directly to the server remote!
+		-- FIX: Dynamically invokes the server using the selected item name matching your data selection
 		bRF:InvokeServer(_G.SelectedBuildMaterialToken, 8001, Instance.new("Part", nil), pCF, true, hCF, false)
 		
 		local dynamicBlockPath, retries = nil, 0
