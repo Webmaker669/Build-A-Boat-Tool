@@ -15,7 +15,7 @@ ScreenGui.Name = "CircleBuilderUI"
 ScreenGui.ResetOnSpawn = false
 
 local MainFrame = Instance.new("Frame", ScreenGui)
-MainFrame.Size = UDim2.new(0, 330, 0, 460)
+MainFrame.Size = UDim2.new(0, 330, 0, 500)
 MainFrame.Position = UDim2.new(0.05, 0, 0.15, 0)
 MainFrame.BackgroundColor3 = Color3.fromRGB(28, 28, 32)
 MainFrame.BorderSizePixel = 0
@@ -27,9 +27,9 @@ Instance.new("UICorner", MainFrame).CornerRadius = UDim.new(0, 12)
 -- Header Styling
 local Title = Instance.new("TextLabel", MainFrame)
 Title.Size = UDim2.new(1, 0, 0, 45)
-Title.Text = "⭕ AUTO-SMOOTH CIRCLE ENGINE"
+Title.Text = "⭕ PRO CONFIGURABLE CIRCLE ENGINE"
 Title.TextColor3 = Color3.fromRGB(255, 255, 255)
-Title.TextSize = 14
+Title.TextSize = 13
 Title.Font = Enum.Font.GothamBold
 Title.BackgroundColor3 = Color3.fromRGB(38, 38, 44)
 Instance.new("UICorner", Title).CornerRadius = UDim.new(0, 12)
@@ -46,6 +46,7 @@ selectionBox.LineThickness = 0.04
 local selectedCenterPos = nil
 local blockName = "PlasticBlock"
 local isSelecting = false
+local showLivePreview = false
 local currentColor = Color3.new(1, 1, 1)
 
 local colorPalette = {
@@ -56,10 +57,10 @@ local colorPalette = {
 }
 local currentColorIndex = 1
 
--- Fields Factory
+-- Input Fields Factory
 local function createInputField(labelText, yPos, defaultValue, editable)
     local label = Instance.new("TextLabel", MainFrame)
-    label.Size = UDim2.new(0, 140, 0, 28)
+    label.Size = UDim2.new(0, 150, 0, 28)
     label.Position = UDim2.new(0, 15, 0, yPos)
     label.Text = labelText
     label.TextColor3 = Color3.fromRGB(190, 190, 195)
@@ -69,8 +70,8 @@ local function createInputField(labelText, yPos, defaultValue, editable)
     label.Font = Enum.Font.Gotham
 
     local box = Instance.new("TextBox", MainFrame)
-    box.Size = UDim2.new(0, 140, 0, 28)
-    box.Position = UDim2.new(0, 165, 0, yPos)
+    box.Size = UDim2.new(0, 130, 0, 28)
+    box.Position = UDim2.new(0, 175, 0, yPos)
     box.Text = defaultValue
     box.TextColor3 = editable and Color3.fromRGB(255, 255, 255) or Color3.fromRGB(120, 120, 125)
     box.BackgroundColor3 = Color3.fromRGB(44, 44, 50)
@@ -83,16 +84,17 @@ local function createInputField(labelText, yPos, defaultValue, editable)
     return box
 end
 
--- Input box initializations
+-- Configurable settings fields
 local inputRadius = createInputField("Circle Radius / Range:", 60, "20", true)
-local inputSizeY  = createInputField("Block Height (Y Slider):", 100, "2", true)
-local inputSizeX  = createInputField("Block Width (Auto X):", 140, "Calculating...", false)
-local inputSizeZ  = createInputField("Block Depth (Auto Z):", 180, "Calculating...", false)
+local inputSteps  = createInputField("Total Parts Count:", 100, "30", true)
+local inputSizeY  = createInputField("Block Height (Y):", 140, "2", true)
+local inputSizeX  = createInputField("Calculated Width (X):", 180, "0.00", false)
+local inputSizeZ  = createInputField("Calculated Depth (Z):", 220, "0.00", false)
 
--- Color Palette Visual Configuration Options
+-- Interactive Active Color Picker Interface Setup
 local colorLabel = Instance.new("TextLabel", MainFrame)
-colorLabel.Size = UDim2.new(0, 140, 0, 30)
-colorLabel.Position = UDim2.new(0, 15, 0, 230)
+colorLabel.Size = UDim2.new(0, 150, 0, 30)
+colorLabel.Position = UDim2.new(0, 15, 0, 260)
 colorLabel.Text = "Active Build Color:"
 colorLabel.TextColor3 = Color3.fromRGB(190, 190, 195)
 colorLabel.TextSize = 13
@@ -101,8 +103,8 @@ colorLabel.BackgroundTransparency = 1
 colorLabel.Font = Enum.Font.Gotham
 
 local btnColorPicker = Instance.new("TextButton", MainFrame)
-btnColorPicker.Size = UDim2.new(0, 140, 0, 28)
-btnColorPicker.Position = UDim2.new(0, 165, 0, 230)
+btnColorPicker.Size = UDim2.new(0, 130, 0, 28)
+btnColorPicker.Position = UDim2.new(0, 175, 0, 260)
 btnColorPicker.Text = "◽ Pure White"
 btnColorPicker.Font = Enum.Font.GothamBold
 btnColorPicker.TextSize = 12
@@ -118,10 +120,10 @@ btnColorPicker.MouseButton1Click:Connect(function()
     btnColorPicker.Text = "Color Chosen"
 end)
 
--- Status Container Update Labels
+-- Status Readings Output Labels
 local statusLabel = Instance.new("TextLabel", MainFrame)
 statusLabel.Size = UDim2.new(1, -30, 0, 30)
-statusLabel.Position = UDim2.new(0, 15, 0, 275)
+statusLabel.Position = UDim2.new(0, 15, 0, 295)
 statusLabel.Text = "Center Target Block: NOT CHOSEN"
 statusLabel.TextColor3 = Color3.fromRGB(240, 90, 90)
 statusLabel.TextSize = 12
@@ -130,37 +132,40 @@ statusLabel.BackgroundTransparency = 1
 
 local function createButton(text, yPos, color)
     local btn = Instance.new("TextButton", MainFrame)
-    btn.Size = UDim2.new(1, -30, 0, 42)
+    btn.Size = UDim2.new(1, -30, 0, 36)
     btn.Position = UDim2.new(0, 15, 0, yPos)
     btn.Text = text
     btn.TextColor3 = Color3.fromRGB(255, 255, 255)
-    btn.TextSize = 13
+    btn.TextSize = 12
     btn.Font = Enum.Font.GothamBold
     btn.BackgroundColor3 = color
     btn.BorderSizePixel = 0
-    Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 8)
+    Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 6)
     return btn
 end
 
-local btnSelect = createButton("🎯 CHOOSE CENTER PIECE", 315, Color3.fromRGB(0, 122, 215))
-local btnBuild  = createButton("🚀 COMMENCE RING GENERATION", 370, Color3.fromRGB(46, 139, 87))
+local btnSelect  = createButton("🎯 CHOOSE CENTER PIECE", 335, Color3.fromRGB(0, 122, 215))
+local btnPreview = createButton("👁️ TOGGLE LIVE 3D BLUEPRINT: OFF", 376, Color3.fromRGB(110, 110, 115))
+local btnBuild   = createButton("🚀 COMMENCE RING GENERATION", 417, Color3.fromRGB(46, 139, 87))
 
--- Geometric Preview Processor Subroutines
+-- Proportional Matrix Calculation Engine with Live Preview Hooks
 local function updateRealtimeVisualizerRing()
     previewFolder:ClearAllChildren()
-    if not selectedCenterPos then return end
     
     local radius = tonumber(inputRadius.Text) or 20
+    local steps  = tonumber(inputSteps.Text) or 30
     local sizeY  = tonumber(inputSizeY.Text) or 2
     
-    -- DYNAMIC AUTO-SIZING GEOMETRY MATH Engine
-    local steps = math.clamp(math.floor(2 * math.pi * radius / 3), 12, 200)
+    -- GEOMETRIC RESOLUTION MATH Engine
+    -- Calculates exact depth (Z) and outer edge diameter alignment (X) based strictly on target range and part limits
     local circumference = 2 * math.pi * radius
     local sizeZ = circumference / steps
     local sizeX = (2 * radius * math.tan(math.pi / steps)) + 0.02
     
     inputSizeX.Text = string.format("%.3f", sizeX)
     inputSizeZ.Text = string.format("%.3f", sizeZ)
+    
+    if not selectedCenterPos or not showLivePreview then return end
     
     for i = 1, steps do
         local angle = (i / steps) * math.pi * 2
@@ -181,11 +186,26 @@ local function updateRealtimeVisualizerRing()
     end
 end
 
-inputRadius:GetPropertyChangedSignal("Text"):Connect(updateRealtimeVisualizerRing)
-inputSizeY:GetPropertyChangedSignal("Text"):Connect(updateRealtimeVisualizerRing)
+-- Value field update state tracking hooks
+for _, box in ipairs({inputRadius, inputSteps, inputSizeY}) do
+    box:GetPropertyChangedSignal("Text"):Connect(updateRealtimeVisualizerRing)
+end
 btnColorPicker:GetPropertyChangedSignal("BackgroundColor3"):Connect(updateRealtimeVisualizerRing)
 
--- Click Processing Actions Handler
+-- Blueprint visibility state controller switch
+btnPreview.MouseButton1Click:Connect(function()
+    showLivePreview = not showLivePreview
+    if showLivePreview then
+        btnPreview.Text = "👁️ TOGGLE LIVE 3D BLUEPRINT: ON"
+        btnPreview.BackgroundColor3 = Color3.fromRGB(155, 80, 180)
+    else
+        btnPreview.Text = "👁️ TOGGLE LIVE 3D BLUEPRINT: OFF"
+        btnPreview.BackgroundColor3 = Color3.fromRGB(110, 110, 115)
+    end
+    updateRealtimeVisualizerRing()
+end)
+
+-- Interactive Workspace Node Selector
 local renderConnection, clickConnection
 btnSelect.MouseButton1Click:Connect(function()
     if isSelecting then return end
@@ -216,14 +236,14 @@ btnSelect.MouseButton1Click:Connect(function()
     end)
 end)
 
--- Remote Invoking Build Execution Operations Thread
+-- Remote Invoking Build Execution Subroutines Pipeline
 btnBuild.MouseButton1Click:Connect(function()
     if isSelecting or not selectedCenterPos then return end
     
     local radius = tonumber(inputRadius.Text) or 20
+    local steps  = tonumber(inputSteps.Text) or 30
     local sizeY  = tonumber(inputSizeY.Text) or 2
     
-    local steps = math.clamp(math.floor(2 * math.pi * radius / 3), 12, 200)
     local circumference = 2 * math.pi * radius
     local sizeZ = circumference / steps
     local sizeX = (2 * radius * math.tan(math.pi / steps)) + 0.02
