@@ -7,62 +7,80 @@ sG.Name = "StudioUI"
 sG.ResetOnSpawn = false
 sG.Parent = P:WaitForChild("PlayerGui")
 
-local cCF, uC, sP, isMin = nil, true, false, false
+local cCF = nil
+local uC = true
+local sP = false
+local isMin = false
 
 local f = workspace:WaitForChild("Blocks"):WaitForChild(P.Name)
 
-local pFld = Instance.new("Folder", workspace)
+local pFld = Instance.new("Folder")
 pFld.Name = "CircleHologram"
+pFld.Parent = workspace
 
-local m = Instance.new("Frame", sG)
+local m = Instance.new("Frame")
+m.Parent = sG
 m.Size = UDim2.new(0, 340, 0, 320)
 m.Position = UDim2.new(0.05, 0, 0.2, 0)
 m.BackgroundTransparency = 1
 m.BorderSizePixel = 0
 
-local hb = Instance.new("Frame", m)
+local hb = Instance.new("Frame")
+hb.Parent = m
 hb.Size = UDim2.new(1, 0, 0, 32)
 hb.BackgroundColor3 = Color3.fromRGB(24, 24, 28)
 hb.BorderSizePixel = 0
 hb.Active = true
 
-Instance.new("UICorner", hb).CornerRadius = UDim.new(0, 8)
+local hbCorner = Instance.new("UICorner")
+hbCorner.CornerRadius = UDim.new(0, 8)
+hbCorner.Parent = hb
 
-local t = Instance.new("TextLabel", hb)
+local t = Instance.new("TextLabel")
+t.Parent = hb
 t.Size = UDim2.new(1, -80, 1, 0)
 t.Text = "  Seamless Circle Studio"
 t.TextColor3 = Color3.fromRGB(240, 240, 245)
 t.TextSize = 13
-t.Font = 4
-t.TextXAlignment = 0
+t.Font = Enum.Font.SourceSansBold
+t.TextXAlignment = Enum.TextXAlignment.Left
 t.BackgroundTransparency = 1
 
-local oB = Instance.new("TextButton", sG)
+local oB = Instance.new("TextButton")
+oB.Parent = sG
 oB.Size = UDim2.new(0, 90, 0, 30)
 oB.Position = UDim2.new(0, 0, 0.5, -15)
 oB.BackgroundColor3 = Color3.fromRGB(30, 30, 35)
 oB.Text = "Open Studio"
 oB.TextColor3 = Color3.new(1, 1, 1)
-oB.Font = 4
+oB.Font = Enum.Font.SourceSansBold
 oB.TextSize = 13
 oB.Visible = false
 
-Instance.new("UICorner", oB).CornerRadius = UDim.new(0, 6)
+local oBCorner = Instance.new("UICorner")
+oBCorner.CornerRadius = UDim.new(0, 6)
+oBCorner.Parent = oB
 
-local cf = Instance.new("Frame", m)
+local cf = Instance.new("Frame")
+cf.Parent = m
 cf.Size = UDim2.new(1, 0, 0, 285)
 cf.Position = UDim2.new(0, 0, 0, 32)
 cf.BackgroundColor3 = Color3.fromRGB(30, 30, 35)
 cf.BorderSizePixel = 0
 
-Instance.new("UICorner", cf).CornerRadius = UDim.new(0, 8)
+local cfCorner = Instance.new("UICorner")
+cfCorner.CornerRadius = UDim.new(0, 8)
+cfCorner.Parent = cf
 
-local drag, dInp, dStart, sPos
+local drag = false
+local dInp
+local dStart
+local sPos
 
 hb.InputBegan:Connect(function(i)
-    local t = i.UserInputType
+    local typ = i.UserInputType
 
-    if t == Enum.UserInputType.MouseButton1 or t == Enum.UserInputType.Touch then
+    if typ == Enum.UserInputType.MouseButton1 or typ == Enum.UserInputType.Touch then
         drag = true
         dStart = i.Position
         sPos = m.Position
@@ -76,9 +94,9 @@ hb.InputBegan:Connect(function(i)
 end)
 
 hb.InputChanged:Connect(function(i)
-    local t = i.UserInputType
+    local typ = i.UserInputType
 
-    if t == Enum.UserInputType.MouseMovement or t == Enum.UserInputType.Touch then
+    if typ == Enum.UserInputType.MouseMovement or typ == Enum.UserInputType.Touch then
         dInp = i
     end
 end)
@@ -86,26 +104,32 @@ end)
 UIS.InputChanged:Connect(function(i)
     if i == dInp and drag then
         local d = i.Position - dStart
-        local xO = sPos.X.Offset + d.X
-        local yO = sPos.Y.Offset + d.Y
 
-        m.Position = UDim2.new(sPos.X.Scale, xO, sPos.Y.Scale, yO)
+        m.Position = UDim2.new(
+            sPos.X.Scale,
+            sPos.X.Offset + d.X,
+            sPos.Y.Scale,
+            sPos.Y.Offset + d.Y
+        )
     end
 end)
 
 local function cBtn(n, x, y, w, h, c, p)
-    local b = Instance.new("TextButton", p)
+    local b = Instance.new("TextButton")
 
+    b.Parent = p
     b.Size = UDim2.new(0, w, 0, h)
     b.Position = UDim2.new(0, x, 0, y)
     b.BackgroundColor3 = c
     b.Text = n
     b.TextColor3 = Color3.new(1, 1, 1)
-    b.Font = 4
+    b.Font = Enum.Font.SourceSansBold
     b.TextSize = 13
     b.BorderSizePixel = 0
 
-    Instance.new("UICorner", b).CornerRadius = UDim.new(0, 5)
+    local corner = Instance.new("UICorner")
+    corner.CornerRadius = UDim.new(0, 5)
+    corner.Parent = b
 
     return b
 end
@@ -129,72 +153,81 @@ oB.MouseButton1Click:Connect(function()
     oB.Visible = false
 end)
 
-local cP = Instance.new("Frame", cf)
+local cP = Instance.new("Frame")
+cP.Parent = cf
 cP.Size = UDim2.new(0, 40, 0, 40)
 cP.Position = UDim2.new(0, 280, 0, 12)
 cP.BackgroundColor3 = Color3.new(1, 1, 1)
 cP.BorderSizePixel = 0
 
-Instance.new("UICorner", cP).CornerRadius = UDim.new(0, 6)
+local cpCorner = Instance.new("UICorner")
+cpCorner.CornerRadius = UDim.new(0, 6)
+cpCorner.Parent = cP
 
-local pF = Instance.new("Frame", cf)
+local pF = Instance.new("Frame")
+pF.Parent = cf
 pF.Size = UDim2.new(0, 250, 0, 40)
 pF.Position = UDim2.new(0, 18, 0, 12)
 pF.BackgroundTransparency = 1
 
-local uG = Instance.new("UIGridLayout", pF)
+local uG = Instance.new("UIGridLayout")
+uG.Parent = pF
 uG.CellSize = UDim2.new(0, 23, 0, 19)
 uG.CellPadding = UDim2.new(0, 2, 0, 2)
 
 local robloxColors = {
-    Color3.fromRGB(255, 0, 0),
-    Color3.fromRGB(0, 255, 0),
-    Color3.fromRGB(0, 0, 255),
-    Color3.fromRGB(255, 255, 0),
-    Color3.fromRGB(255, 0, 255),
-    Color3.fromRGB(0, 255, 255),
-    Color3.fromRGB(255, 255, 255),
-    Color3.fromRGB(163, 162, 165),
-    Color3.fromRGB(0, 0, 0),
-    Color3.fromRGB(255, 170, 0),
-    Color3.fromRGB(170, 85, 0),
-    Color3.fromRGB(0, 85, 0),
-    Color3.fromRGB(85, 0, 127),
-    Color3.fromRGB(170, 0, 0),
-    Color3.fromRGB(85, 170, 255),
-    Color3.fromRGB(255, 170, 255),
-    Color3.fromRGB(100, 20, 20),
-    Color3.fromRGB(20, 100, 20),
-    Color3.fromRGB(20, 20, 100),
-    Color3.fromRGB(245, 205, 48)
+    Color3.fromRGB(255,0,0),
+    Color3.fromRGB(0,255,0),
+    Color3.fromRGB(0,0,255),
+    Color3.fromRGB(255,255,0),
+    Color3.fromRGB(255,0,255),
+    Color3.fromRGB(0,255,255),
+    Color3.fromRGB(255,255,255),
+    Color3.fromRGB(163,162,165),
+    Color3.fromRGB(0,0,0),
+    Color3.fromRGB(255,170,0),
+    Color3.fromRGB(170,85,0),
+    Color3.fromRGB(0,85,0),
+    Color3.fromRGB(85,0,127),
+    Color3.fromRGB(170,0,0),
+    Color3.fromRGB(85,170,255),
+    Color3.fromRGB(255,170,255),
+    Color3.fromRGB(100,20,20),
+    Color3.fromRGB(20,100,20),
+    Color3.fromRGB(20,20,100),
+    Color3.fromRGB(245,205,48)
 }
 
 local function cI(n, p, x, y, r)
-    local l = Instance.new("TextLabel", cf)
+    local l = Instance.new("TextLabel")
 
+    l.Parent = cf
     l.Size = UDim2.new(0, 65, 0, 22)
     l.Position = UDim2.new(0, x, 0, y)
     l.Text = n
     l.TextColor3 = Color3.fromRGB(180, 180, 185)
     l.TextSize = 12
-    l.Font = 3
-    l.TextXAlignment = 0
+    l.Font = Enum.Font.SourceSans
+    l.TextXAlignment = Enum.TextXAlignment.Left
     l.BackgroundTransparency = 1
 
-    local b = Instance.new("TextBox", cf)
+    local b = Instance.new("TextBox")
 
+    b.Parent = cf
     b.Size = UDim2.new(0, 80, 0, 22)
     b.Position = UDim2.new(0, x + 65, 0, y)
-    b.BackgroundColor3 = r and Color3.fromRGB(36, 36, 40) or Color3.fromRGB(44, 44, 50)
-    b.TextColor3 = r and Color3.fromRGB(140, 140, 145) or Color3.new(1, 1, 1)
+    b.BackgroundColor3 = r and Color3.fromRGB(36,36,40) or Color3.fromRGB(44,44,50)
+    b.TextColor3 = r and Color3.fromRGB(140,140,145) or Color3.new(1,1,1)
     b.BorderSizePixel = 0
     b.Text = p
     b.ClearTextOnFocus = false
-    b.Font = 3
+    b.Font = Enum.Font.SourceSans
     b.TextSize = 13
     b.TextEditable = not r
 
-    Instance.new("UICorner", b).CornerRadius = UDim.new(0, 4)
+    local corner = Instance.new("UICorner")
+    corner.CornerRadius = UDim.new(0, 4)
+    corner.Parent = b
 
     return b
 end
@@ -207,26 +240,29 @@ local aZ = cI("Length (Z):", "Calculated", 20, 124, true)
 local iC = cI("RGB Val:", "1,1,1", 170, 124)
 
 local function cB(n, x, y, w, h, c)
-    local btn = Instance.new("TextButton", cf)
+    local btn = Instance.new("TextButton")
 
+    btn.Parent = cf
     btn.Size = UDim2.new(0, w, 0, h)
     btn.Position = UDim2.new(0, x, 0, y)
     btn.BackgroundColor3 = c
     btn.Text = n
-    btn.TextColor3 = Color3.new(1, 1, 1)
-    btn.Font = 4
+    btn.TextColor3 = Color3.new(1,1,1)
+    btn.Font = Enum.Font.SourceSansBold
     btn.TextSize = 13
     btn.BorderSizePixel = 0
 
-    Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 6)
+    local corner = Instance.new("UICorner")
+    corner.CornerRadius = UDim.new(0, 6)
+    corner.Parent = btn
 
     return btn
 end
 
-local sC = cB("SELECT CENTER", 20, 158, 145, 28, Color3.fromRGB(130, 85, 180))
-local pV = cB("PREVIEW: OFF", 175, 158, 145, 28, Color3.fromRGB(58, 62, 68))
-local tB = cB("PAINTING: ON", 20, 194, 300, 28, Color3.fromRGB(0, 110, 185))
-local bD = cB("BUILD SEAMLESS CIRCLE", 20, 232, 300, 36, Color3.fromRGB(0, 135, 85))
+local sC = cB("SELECT CENTER", 20, 158, 145, 28, Color3.fromRGB(130,85,180))
+local pV = cB("PREVIEW: OFF", 175, 158, 145, 28, Color3.fromRGB(58,62,68))
+local tB = cB("PAINTING: ON", 20, 194, 300, 28, Color3.fromRGB(0,110,185))
+local bD = cB("BUILD SEAMLESS CIRCLE", 20, 232, 300, 36, Color3.fromRGB(0,135,85))
 
 local function uP()
     local r = tonumber(iR.Text) or 30
@@ -245,12 +281,15 @@ local function uP()
         for i = 1, maxRender do
             local step = (i / maxRender) * (2 * math.pi)
 
-            local p = Instance.new("Part", pFld)
+            local p = Instance.new("Part")
+            p.Parent = pFld
 
             p.Size = Vector3.new(0.05, y, sZ * (b / maxRender))
-            p.CFrame = cCF
-                * CFrame.new(math.cos(step) * r, 0, math.sin(step) * r)
-                * CFrame.Angles(0, -step, 0)
+
+            p.CFrame =
+                cCF *
+                CFrame.new(math.cos(step) * r, 0, math.sin(step) * r) *
+                CFrame.Angles(0, -step, 0)
 
             p.Anchored = true
             p.CanCollide = false
@@ -262,24 +301,34 @@ local function uP()
 end
 
 for _, c in ipairs(robloxColors) do
-    local sw = Instance.new("TextButton", pF)
+    local sw = Instance.new("TextButton")
 
+    sw.Parent = pF
     sw.BackgroundColor3 = c
     sw.Text = ""
     sw.BorderSizePixel = 0
 
-    Instance.new("UICorner", sw).CornerRadius = UDim.new(0, 4)
+    local corner = Instance.new("UICorner")
+    corner.CornerRadius = UDim.new(0, 4)
+    corner.Parent = sw
 
     sw.MouseButton1Click:Connect(function()
         cP.BackgroundColor3 = c
-        iC.Text = string.format("%.2f, %.2f, %.2f", c.R, c.G, c.B)
+
+        iC.Text = string.format(
+            "%.2f, %.2f, %.2f",
+            c.R,
+            c.G,
+            c.B
+        )
 
         uP()
     end)
 end
 
 local function pC()
-    local rS, gS, bS = iC.Text:match("([^,]+),([^,]+),([^,]+)")
+    local rS, gS, bS =
+        iC.Text:match("([^,]+),([^,]+),([^,]+)")
 
     if rS and gS and bS then
         local red = tonumber(rS) or 1
@@ -299,7 +348,7 @@ iC:GetPropertyChangedSignal("Text"):Connect(pC)
 
 sC.MouseButton1Click:Connect(function()
     sC.Text = "CLICK PLOT PART..."
-    sC.BackgroundColor3 = Color3.fromRGB(180, 50, 50)
+    sC.BackgroundColor3 = Color3.fromRGB(180,50,50)
 
     local conn
 
@@ -308,7 +357,7 @@ sC.MouseButton1Click:Connect(function()
             cCF = M.Target.CFrame
 
             sC.Text = "CENTER SET"
-            sC.BackgroundColor3 = Color3.fromRGB(0, 135, 85)
+            sC.BackgroundColor3 = Color3.fromRGB(0,135,85)
 
             conn:Disconnect()
 
@@ -320,12 +369,12 @@ end)
 pV.MouseButton1Click:Connect(function()
     if not cCF then
         pV.Text = "Select A Center Before Previewing"
-        pV.BackgroundColor3 = Color3.fromRGB(180, 50, 50)
+        pV.BackgroundColor3 = Color3.fromRGB(180,50,50)
 
         task.delay(2, function()
             if not sP then
                 pV.Text = "PREVIEW: OFF"
-                pV.BackgroundColor3 = Color3.fromRGB(58, 62, 68)
+                pV.BackgroundColor3 = Color3.fromRGB(58,62,68)
             end
         end)
 
@@ -336,10 +385,10 @@ pV.MouseButton1Click:Connect(function()
 
     pV.Text = sP and "PREVIEW: ON" or "PREVIEW: OFF"
 
-    local c1 = Color3.fromRGB(0, 135, 85)
-    local c2 = Color3.fromRGB(58, 62, 68)
-
-    pV.BackgroundColor3 = sP and c1 or c2
+    pV.BackgroundColor3 =
+        sP and
+        Color3.fromRGB(0,135,85) or
+        Color3.fromRGB(58,62,68)
 
     uP()
 end)
@@ -347,21 +396,25 @@ end)
 tB.MouseButton1Click:Connect(function()
     uC = not uC
 
-    tB.Text = uC and "PAINTING: ON" or "PAINTING: OFF"
+    tB.Text =
+        uC and
+        "PAINTING: ON" or
+        "PAINTING: OFF"
 
-    local c1 = Color3.fromRGB(0, 110, 185)
-    local c2 = Color3.fromRGB(85, 88, 94)
-
-    tB.BackgroundColor3 = uC and c1 or c2
+    tB.BackgroundColor3 =
+        uC and
+        Color3.fromRGB(0,110,185) or
+        Color3.fromRGB(85,88,94)
 
     iC.TextEditable = uC
 
-    iC.BackgroundColor3 = uC
-        and Color3.fromRGB(44, 44, 50)
-        or Color3.fromRGB(36, 36, 40)
+    iC.BackgroundColor3 =
+        uC and
+        Color3.fromRGB(44,44,50) or
+        Color3.fromRGB(36,36,40)
 
     if not uC then
-        cP.BackgroundColor3 = Color3.fromRGB(163, 162, 165)
+        cP.BackgroundColor3 = Color3.fromRGB(163,162,165)
     end
 
     uP()
@@ -370,8 +423,7 @@ end)
 bD.MouseButton1Click:Connect(function()
     if not cCF then
         sC.Text = "SET CENTER FIRST!"
-        sC.BackgroundColor3 = Color3.fromRGB(180, 50, 50)
-
+        sC.BackgroundColor3 = Color3.fromRGB(180,50,50)
         return
     end
 
@@ -396,20 +448,23 @@ bD.MouseButton1Click:Connect(function()
         local cosA = math.cos(a) * r
         local sinA = math.sin(a) * r
 
-        local bP = cCF
-            * CFrame.new(cosA, 0, sinA)
-            * CFrame.Angles(0, -a, 0)
+        local bP =
+            cCF *
+            CFrame.new(cosA, 0, sinA) *
+            CFrame.Angles(0, -a, 0)
 
-        local t1 = P.Backpack:FindFirstChild("BuildingTool")
-            or ch:FindFirstChild("BuildingTool")
+        local t1 =
+            P.Backpack:FindFirstChild("BuildingTool") or
+            ch:FindFirstChild("BuildingTool")
 
         if t1 then
             h:EquipTool(t1)
 
             local wZ = workspace:WaitForChild("WhiteZone")
 
-            local rot = CFrame.new(-10, 6.1, -20)
-                * CFrame.Angles(0, -a, 0)
+            local rot =
+                CFrame.new(-10, 6.1, -20) *
+                CFrame.Angles(0, -a, 0)
 
             t1:WaitForChild("RF"):InvokeServer(
                 "PlasticBlock",
@@ -428,8 +483,9 @@ bD.MouseButton1Click:Connect(function()
 
         local pB = f:FindFirstChild("PlasticBlock")
 
-        local t2 = P.Backpack:FindFirstChild("ScalingTool")
-            or ch:FindFirstChild("ScalingTool")
+        local t2 =
+            P.Backpack:FindFirstChild("ScalingTool") or
+            ch:FindFirstChild("ScalingTool")
 
         if pB and t2 then
             h:EquipTool(t2)
@@ -448,15 +504,16 @@ bD.MouseButton1Click:Connect(function()
         task.wait(0.05)
 
         if uC then
-            local t3 = P.Backpack:FindFirstChild("PaintingTool")
-                or ch:FindFirstChild("PaintingTool")
+            local t3 =
+                P.Backpack:FindFirstChild("PaintingTool") or
+                ch:FindFirstChild("PaintingTool")
 
             if pB and t3 then
                 h:EquipTool(t3)
 
                 t3:WaitForChild("RF"):InvokeServer({
                     {
-                        { pB, cP.BackgroundColor3 }
+                        {pB, cP.BackgroundColor3}
                     }
                 })
 
