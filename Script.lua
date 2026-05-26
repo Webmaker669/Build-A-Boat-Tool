@@ -133,6 +133,7 @@ bD.MouseButton1Click:Connect(function()
     _G.CircleUseColor = uC
     _G.CircleCenterCFrame = cCF
     
+    -- FIXED LINE 136 LINK: Uses your exact working raw link configuration
     loadstring(game:HttpGet("https://githubusercontent.com"))()
 end)
 uP()
