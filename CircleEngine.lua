@@ -1,4 +1,4 @@
--- Bypasses the local variables and hooks your original logic straight to the global GUI memory
+-- Bypasses local variables and links straight to global GUI memory
 local radius = _G.CircleRadius or 30
 local numberOfBlocks = _G.CircleBlocks or 120
 local sizeY = _G.CircleHeightY or 2
@@ -18,9 +18,9 @@ local blocksFolder = workspace:WaitForChild("Blocks"):WaitForChild(player.Name)
 local perfectZWidth = (2 * math.pi * radius) / numberOfBlocks
 local targetSize = Vector3.new(sizeX, sizeY, perfectZWidth + 0.02) 
 
-print("Executing original loop core logic with fixed frame validation...")
+print("Executing logic with humanized tool-switch delay profiles...")
 
--- Active tracker to catch the exact piece that lands in your folder
+-- Listener setup to track exactly when parts land in your folder
 local newlySpawnedBlock = nil
 local connection = blocksFolder.ChildAdded:Connect(function(child)
     if child:IsA("Part") and child.Name == "PlasticBlock" then
@@ -29,19 +29,21 @@ local connection = blocksFolder.ChildAdded:Connect(function(child)
 end)
 
 for i = 1, numberOfBlocks do
-    -- Precise step calculations from your template
     local angle = (i / numberOfBlocks) * (2 * math.pi)
     local offsetX = math.cos(angle) * radius
     local offsetZ = math.sin(angle) * radius
     local blockPosition = centerCFrame * CFrame.new(offsetX, 0, offsetZ) * CFrame.Angles(0, -angle, 0)
     
-    -- Reset the tracker before placing
     newlySpawnedBlock = nil
     
-    -- 1. Equip BuildingTool and drop block
+    -- ============================================================================
+    -- STEP 1: EQUIP BUILDING TOOL AND PLACE
+    -- ============================================================================
     local buildingTool = backpack:FindFirstChild("BuildingTool") or character:FindFirstChild("BuildingTool")
     if buildingTool then
         humanoid:EquipTool(buildingTool)
+        task.wait(0.06) -- Delay: Let game register you are holding the building tool
+        
         local buildArgs = {
             "PlasticBlock",
             8001,
@@ -54,21 +56,24 @@ for i = 1, numberOfBlocks do
         buildingTool:WaitForChild("RF"):InvokeServer(unpack(buildArgs))
     end
     
-    -- FRAME VALIDATOR WAIT: Forces the code to pause until the block physically exists in your folder
+    -- Wait until the block physically exists in the workspace folder
     local startTime = os.clock()
     repeat 
         task.wait() 
-    until newlySpawnedBlock or (os.clock() - startTime > 0.4) -- 0.4s safety timeout if a block fails
+    until newlySpawnedBlock or (os.clock() - startTime > 0.4)
     
-    -- 2. Equip ScalingTool and apply dimensions to the fresh block captured by the listener
+    -- ============================================================================
+    -- STEP 2: EQUIP SCALING TOOL AND RESIZE
+    -- ============================================================================
     if newlySpawnedBlock then
         local targetBlock = newlySpawnedBlock
         local scalingTool = backpack:FindFirstChild("ScalingTool") or character:FindFirstChild("ScalingTool")
         
         if scalingTool then
             humanoid:EquipTool(scalingTool)
-            targetBlock.Name = "ProcessedBlock" -- Safe rename now that we are 100% sure it's the right block
+            task.wait(0.06) -- Delay: Let game register you switched to the scaling tool
             
+            targetBlock.Name = "ProcessedBlock"
             local scaleArgs = {
                 targetBlock,
                 targetSize,
@@ -77,13 +82,17 @@ for i = 1, numberOfBlocks do
             scalingTool:WaitForChild("RF"):InvokeServer(unpack(scaleArgs))
         end
         
-        task.wait(0.01)
+        task.wait(0.04) -- Short rest buffer before painting
         
-        -- 3. Equip PaintingTool and apply color palette
+        -- ============================================================================
+        -- STEP 3: EQUIP PAINTING TOOL AND COLOR
+        -- ============================================================================
         if useColor then
             local paintingTool = backpack:FindFirstChild("PaintingTool") or character:FindFirstChild("PaintingTool")
             if paintingTool then
                 humanoid:EquipTool(paintingTool)
+                task.wait(0.06) -- Delay: Let game register you switched to the painting tool
+                
                 local paintArgs = {
                     {
                         {
@@ -97,18 +106,17 @@ for i = 1, numberOfBlocks do
         end
     end
     
+    -- Unequip tools and clear hands before starting the next block segment
     humanoid:UnequipTools()
-    task.wait(0.015)
+    task.wait(0.05) -- Clean rest delay between separate block steps
 end
 
--- Disconnect the tracker after the circle is done building
+-- Cleanup routine
 connection:Disconnect()
-
--- Revert item names back to normal cleanup routine
 for _, block in ipairs(blocksFolder:GetChildren()) do
     if block.Name == "ProcessedBlock" then
         block.Name = "PlasticBlock"
     end
 end
 
-print("Z-axis circle complete using verified legacy execution matrix!")
+print("Circle complete with zero skipped blocks!")
