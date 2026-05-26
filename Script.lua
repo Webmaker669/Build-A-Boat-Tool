@@ -92,7 +92,7 @@ _G.CircleBuilderUI_SharedData = {
 }
 
 local uiData = _G.CircleBuilderUI_SharedData
-if not uiData or not uiData.MainFrame then error("Run Part 1 before running this script.") end
+if not uiData or not uiData.MainFrame then error("Run Part 1 first.") end
 local MainFrame = uiData.MainFrame
 
 local colorLabel = Instance.new("TextLabel", MainFrame)
@@ -263,7 +263,7 @@ local LocalPlayer = Players.LocalPlayer
 local Mouse = LocalPlayer:GetMouse()
 
 local uiData = _G.CircleBuilderUI_SharedData
-if not uiData or not uiData.btnBuild then error("Run Part 2 before running this script.") end
+if not uiData or not uiData.btnBuild then error("Run Part 2 first.") end
 
 local MainFrame = uiData.MainFrame local CloseBtn = uiData.CloseBtn local HelpBtn = uiData.HelpBtn local ReopenButton = uiData.ReopenButton
 local inputRadius = uiData.inputRadius local inputSteps = uiData.inputSteps
@@ -286,7 +286,7 @@ local currentR, currentG, currentB = 1, 1, 1 local currentColor = Color3.new(1, 
 CloseBtn.MouseButton1Click:Connect(function() MainFrame.Visible = false ReopenButton.Visible = true ColorPanel.Visible = false HelpPanel.Visible = false end)
 ReopenButton.MouseButton1Click:Connect(function() MainFrame.Visible = true ReopenButton.Visible = false end)
 
--- Smooth Pop-out Click Actions Menu
+-- FIXED: Explicit side panel trigger mapping hooks attached directly onto buttons
 btnColorPicker.MouseButton1Click:Connect(function() HelpPanel.Visible = false ColorPanel.Visible = not ColorPanel.Visible end)
 HelpBtn.MouseButton1Click:Connect(function() ColorPanel.Visible = false HelpPanel.Visible = not HelpPanel.Visible end)
 
@@ -358,7 +358,7 @@ uiData.Mouse = Mouse uiData.RunService = RunService uiData.LocalPlayer = LocalPl
 
 local Players = game:GetService("Players")
 local uiData = _G.CircleBuilderUI_SharedData
-if not uiData or not uiData.updateRealtimeVisualizerRing then error("Run Part 3 before running this script.") end
+if not uiData or not uiData.updateRealtimeVisualizerRing then error("Run Part 3 first.") end
 
 local inputRadius = uiData.inputRadius local inputSteps = uiData.inputSteps local inputSizeY = uiData.inputSizeY
 local statusLabel = uiData.statusLabel local btnPreview = uiData.btnPreview local btnBuild = uiData.btnBuild
