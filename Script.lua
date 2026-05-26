@@ -1,34 +1,62 @@
 local P, cCF, mP = game:GetService("Players").LocalPlayer, nil, game:GetService("Players").LocalPlayer:GetMouse()
 local sG = Instance.new("ScreenGui", P:WaitForChild("PlayerGui")) sG.Name = "StudioUI" sG.ResetOnSpawn = false
 local m = Instance.new("Frame", sG) m.Size, m.Position = UDim2.new(0,340,0,460), UDim2.new(0.05,0,0.2,0)
-m.BackgroundColor3, m.Active, m.Draggable, m.BorderSizePixel = Color3.fromRGB(30,30,35), true, true, 0
+m.BackgroundColor3, m.Active, m.BorderSizePixel = Color3.fromRGB(30,30,35), true, 0
 Instance.new("UICorner", m).CornerRadius = UDim.new(0,10)
 
--- Header/Title Layout Banner 
+-- Header/Title Layout Banner (Locked for Dragging Only)
 local hb = Instance.new("Frame", m) hb.Size, hb.Position = UDim2.new(1,0,0,38), UDim2.new(0,0,0,0)
 hb.BackgroundColor3, hb.BorderSizePixel = Color3.fromRGB(24,24,28), 0 Instance.new("UICorner", hb).CornerRadius = UDim.new(0,10)
-local t = Instance.new("TextLabel", hb) t.Size, t.Text = UDim2.new(1,-40,1,0), "  Seamless Circle Studio"
+local t = Instance.new("TextLabel", hb) t.Size, t.Text = UDim2.new(1,-80,1,0), "  Seamless Circle Studio"
 t.TextColor3, t.TextSize, t.Font, t.TextXAlignment = Color3.fromRGB(240,240,245), 14, 4, 0 t.BackgroundTransparency = 1
 
--- Minimize Button Layout Component
-local minBtn = Instance.new("TextButton", hb) minBtn.Size, minBtn.Position = UDim2.new(0,26,0,26), UDim2.new(1,-32,0,6)
+-- Side Open Button (Initially Hidden)
+local oB = Instance.new("TextButton", sG) oB.Size, oB.Position = UDim2.new(0,90,0,32), UDim2.new(0,0,0.5,-16)
+oB.BackgroundColor3, oB.Text, oB.TextColor3, oB.Font, oB.TextSize, oB.Visible = Color3.fromRGB(30,30,35), "Open Studio", Color3.new(1,1,1), 4, 13, false
+Instance.new("UICorner", oB).CornerRadius = UDim.new(0,6)
+
+-- Dragging Logic Locked Exclusively to Header Bar
+local dragging, dragInput, dragStart, startPos
+hb.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+        dragging = true dragStart = input.Position startPos = m.Position
+        input.Changed:Connect(function() if input.UserInputState == Enum.UserInputState.End then dragging = false end end)
+    end
+end)
+hb.InputChanged:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then dragInput = input end
+end)
+game:GetService("UserInputService").InputChanged:Connect(function(input)
+    if input == dragInput and dragging then
+        local delta = input.Position - dragStart
+        m.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+    end
+end)
+
+-- Minimize Button Components
+local minBtn = Instance.new("TextButton", hb) minBtn.Size, minBtn.Position = UDim2.new(0,26,0,26), UDim2.new(1,-62,0,6)
 minBtn.BackgroundColor3, minBtn.Text, minBtn.TextColor3, minBtn.Font, minBtn.TextSize = Color3.fromRGB(42,42,48), "-", Color3.new(1,1,1), 4, 18
 minBtn.BorderSizePixel = 0 Instance.new("UICorner", minBtn).CornerRadius = UDim.new(0,6)
+
+-- Close Button Components
+local clsBtn = Instance.new("TextButton", hb) clsBtn.Size, clsBtn.Position = UDim2.new(0,26,0,26), UDim2.new(1,-32,0,6)
+clsBtn.BackgroundColor3, clsBtn.Text, clsBtn.TextColor3, clsBtn.Font, clsBtn.TextSize = Color3.fromRGB(150,50,50), "X", Color3.new(1,1,1), 4, 14
+clsBtn.BorderSizePixel = 0 Instance.new("UICorner", clsBtn).CornerRadius = UDim.new(0,6)
 
 local isMinimized, originalSize = false, m.Size
 minBtn.MouseButton1Click:Connect(function()
     isMinimized = not isMinimized
-    if isMinimized then
-        m:TweenSize(UDim2.new(0, 340, 0, 38), "Out", "Quad", 0.2, true) minBtn.Text = "+"
-    else
-        m:TweenSize(originalSize, "Out", "Quad", 0.2, true) minBtn.Text = "-"
-    end
+    if isMinimized then m:TweenSize(UDim2.new(0, 340, 0, 38), "Out", "Quad", 0.2, true) minBtn.Text = "+"
+    else m:TweenSize(originalSize, "Out", "Quad", 0.2, true) minBtn.Text = "-" end
 end)
+
+clsBtn.MouseButton1Click:Connect(function() m.Visible = false oB.Visible = true end)
+oB.MouseButton1Click:Connect(function() m.Visible = true oB.Visible = false end)
 
 local cP = Instance.new("Frame", m) cP.Size, cP.Position = UDim2.new(0,42,0,42), UDim2.new(0,278,0,52)
 cP.BackgroundColor3, cP.BorderSizePixel = Color3.new(1,1,1), 0 Instance.new("UICorner", cP).CornerRadius = UDim.new(0,8)
 
--- Grid-Based Color Palette Setup
+-- Fixed & Expanded Color Palette Frame Layout
 local pF = Instance.new("Frame", m) pF.Size, pF.Position = UDim2.new(0,250,0,42), UDim2.new(0,20,0,52)
 pF.BackgroundTransparency = 1 local uG = Instance.new("UIGridLayout", pF)
 uG.CellSize, uG.CellPadding = UDim2.new(0,23,0,20), UDim2.new(0,2,0,2)
@@ -61,7 +89,6 @@ local function cB(n, x, y, w, h, c)
     Instance.new("UICorner", btn).CornerRadius = UDim.new(0,6) return btn
 end
 
--- Beautiful Grid-Aligned Compact Action Controls
 local sC = cB("SELECT CENTER", 20, 220, 145, 32, Color3.fromRGB(130,85,180))
 local pV = cB("PREVIEW: OFF", 175, 220, 145, 32, Color3.fromRGB(58,62,68))
 local tB = cB("PAINTING: ON", 20, 260, 300, 32, Color3.fromRGB(0,110,185))
@@ -131,21 +158,3 @@ bD.MouseButton1Click:Connect(function()
     local requestsSent = 0
     for i = 1, nB do
         local a = (i / nB) * (2 * math.pi)
-        local bP = cCF * CFrame.new(math.cos(a)*r, 0, math.sin(a)*r) * CFrame.Angles(0, -a, 0)
-        
-        local t1 = P.Backpack:FindFirstChild("BuildingTool") or ch:FindFirstChild("BuildingTool")
-        if t1 then h:EquipTool(t1) t1:WaitForChild("RF"):InvokeServer("PlasticBlock", 8001, workspace:WaitForChild("WhiteZone"), CFrame.new(-10, 6.1, -20) * CFrame.Angles(0,-a,0), true, bP, false) requestsSent = requestsSent + 1 end
-        task.wait(0.05)
-        local pB = f:FindFirstChild("PlasticBlock") local t2 = P.Backpack:FindFirstChild("ScalingTool") or ch:FindFirstChild("ScalingTool")
-        if pB and t2 then h:EquipTool(t2) pB.Name = gID t2:WaitForChild("RF"):InvokeServer(pB, Vector3.new(sX, sY, sZ), bP) requestsSent = requestsSent + 1 end
-        task.wait(0.05)
-        if uC then local t3 = P.Backpack:FindFirstChild("PaintingTool") or ch:FindFirstChild("PaintingTool")
-            if pB and t3 then h:EquipTool(t3) t3:WaitForChild("RF"):InvokeServer({{{pB, cP.BackgroundColor3}}}) requestsSent = requestsSent + 1 end
-            task.wait(0.05)
-        end
-        h:UnequipTools()
-        if requestsSent >= 15 then task.wait(0.5) requestsSent = 0 end
-    end
-    for _, b in ipairs(f:GetChildren()) do if b.Name == gID then b.Name = "PlasticBlock" end end
-end)
-uP()
