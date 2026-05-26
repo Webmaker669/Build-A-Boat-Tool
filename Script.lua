@@ -234,7 +234,7 @@ end
 
 local iR = cI("Radius:", "30", 20, 68)
 local iB = cI("Blocks:", "120", 170, 68)
-local aX = cI("Thick (X):", "0.05", 20, 96, true)
+local aX = cI("Thick (X):", "0.05", 20, 96)
 local iY = cI("Height (Y):", "2.0", 170, 96)
 local aZ = cI("Length (Z):", "Calculated", 20, 124, true)
 local iC = cI("RGB Val:", "1,1,1", 170, 124)
@@ -327,8 +327,7 @@ for _, c in ipairs(robloxColors) do
 end
 
 local function pC()
-    local rS, gS, bS =
-        iC.Text:match("([^,]+),([^,]+),([^,]+)")
+    local rS, gS, bS = iC.Text:match("([^,]+),([^,]+),([^,]+)")
 
     if rS and gS and bS then
         local red = tonumber(rS) or 1
@@ -368,10 +367,10 @@ end)
 
 pV.MouseButton1Click:Connect(function()
     if not cCF then
-        pV.Text = "Select A Center Before Previewing"
+        pV.Text = "SELECT CENTER FIRST"
         pV.BackgroundColor3 = Color3.fromRGB(180,50,50)
 
-        task.delay(2, function()
+        task.delay(2,function()
             if not sP then
                 pV.Text = "PREVIEW: OFF"
                 pV.BackgroundColor3 = Color3.fromRGB(58,62,68)
@@ -384,11 +383,9 @@ pV.MouseButton1Click:Connect(function()
     sP = not sP
 
     pV.Text = sP and "PREVIEW: ON" or "PREVIEW: OFF"
-
     pV.BackgroundColor3 =
-        sP and
-        Color3.fromRGB(0,135,85) or
-        Color3.fromRGB(58,62,68)
+        sP and Color3.fromRGB(0,135,85)
+        or Color3.fromRGB(58,62,68)
 
     uP()
 end)
@@ -396,22 +393,13 @@ end)
 tB.MouseButton1Click:Connect(function()
     uC = not uC
 
-    tB.Text =
-        uC and
-        "PAINTING: ON" or
-        "PAINTING: OFF"
+    tB.Text = uC and "PAINTING: ON" or "PAINTING: OFF"
 
     tB.BackgroundColor3 =
-        uC and
-        Color3.fromRGB(0,110,185) or
-        Color3.fromRGB(85,88,94)
+        uC and Color3.fromRGB(0,110,185)
+        or Color3.fromRGB(85,88,94)
 
     iC.TextEditable = uC
-
-    iC.BackgroundColor3 =
-        uC and
-        Color3.fromRGB(44,44,50) or
-        Color3.fromRGB(36,36,40)
 
     if not uC then
         cP.BackgroundColor3 = Color3.fromRGB(163,162,165)
@@ -476,12 +464,16 @@ bD.MouseButton1Click:Connect(function()
                 false
             )
 
-            rS = rS + 1
+            rS += 1
         end
 
-        task.wait(0.05)
+        task.wait(0.2)
 
-        local pB = f:FindFirstChild("PlasticBlock")
+        local pB = f:WaitForChild("PlasticBlock", 3)
+
+        if not pB then
+            continue
+        end
 
         local t2 =
             P.Backpack:FindFirstChild("ScalingTool") or
@@ -489,6 +481,8 @@ bD.MouseButton1Click:Connect(function()
 
         if pB and t2 then
             h:EquipTool(t2)
+
+            task.wait(0.1)
 
             pB.Name = gID
 
@@ -498,18 +492,20 @@ bD.MouseButton1Click:Connect(function()
                 bP
             )
 
-            rS = rS + 1
+            rS += 1
         end
 
-        task.wait(0.05)
+        task.wait(0.1)
 
         if uC then
             local t3 =
                 P.Backpack:FindFirstChild("PaintingTool") or
                 ch:FindFirstChild("PaintingTool")
 
-            if pB and t3 then
+            if pB and pB.Parent and t3 then
                 h:EquipTool(t3)
+
+                task.wait(0.1)
 
                 t3:WaitForChild("RF"):InvokeServer({
                     {
@@ -517,10 +513,8 @@ bD.MouseButton1Click:Connect(function()
                     }
                 })
 
-                rS = rS + 1
+                rS += 1
             end
-
-            task.wait(0.05)
         end
 
         h:UnequipTools()
