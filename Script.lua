@@ -352,6 +352,7 @@ previewFolder.Name = "CirclePreviewFolder"
 local selectionBox = Instance.new("SelectionBox", CoreGui)
 selectionBox.Color3 = Color3.fromRGB(0, 255, 255)
 selectionBox.LineThickness = 0.04
+
 local isSelecting = false
 local showLivePreview = false
 
@@ -414,16 +415,13 @@ end
 
 local function applyColorTransformations()
     colorData.ColorObject = Color3.new(colorData.CurrentR, colorData.CurrentG, colorData.CurrentB)
-    ColorIndicator.BackgroundColor3 = colorData.ColorObject
-    btnColorPicker.BackgroundColor3 = colorData.ColorObject
+    ColorIndicator.BackgroundColor3, btnColorPicker.BackgroundColor3 = colorData.ColorObject, colorData.ColorObject
     updateRealtimeVisualizerRing()
 end
 
 local function attachSliderPhysics(button, track, label, prefix, channelCallback)
     local isDragging = false
-    button.MouseButton1Down:Connect(function() 
-        isDragging = true 
-    end)
+    button.MouseButton1Down:Connect(function() isDragging = true end)
     
     game:GetService("UserInputService").InputChanged:Connect(function(input)
         if isDragging and input.UserInputType == Enum.UserInputType.MouseMovement then
@@ -452,16 +450,11 @@ hexBox.FocusLost:Connect(function()
         local r = tonumber(text:sub(1, 2), 16)
         local g = tonumber(text:sub(3, 4), 16)
         local b = tonumber(text:sub(5, 6), 16)
-        
         if r and g and b then
-            colorData.CurrentR = r / 255
-            colorData.CurrentG = g / 255
-            colorData.CurrentB = b / 255
-            
+            colorData.CurrentR, colorData.CurrentG, colorData.CurrentB = r / 255, g / 255, b / 255
             rBtn.Position = UDim2.new(colorData.CurrentR, -7, 0.5, -7)
             gBtn.Position = UDim2.new(colorData.CurrentG, -7, 0.5, -7)
             bBtn.Position = UDim2.new(colorData.CurrentB, -7, 0.5, -7)
-            
             rLabel.Text = "Red Input: " .. tostring(r)
             gLabel.Text = "Green Input: " .. tostring(g)
             bLabel.Text = "Blue Input: " .. tostring(b)
@@ -475,13 +468,11 @@ for _, box in ipairs({inputRadius, inputSteps, inputSizeY}) do
 end
 
 btnPreview.MouseButton1Click:Connect(function()
-    not showLivePreview = not showLivePreview
+    showLivePreview = not showLivePreview
     if showLivePreview then
-        btnPreview.Text = "Hologram Preview Configuration: Active"
-        btnPreview.BackgroundColor3 = Color3.fromRGB(155, 80, 180)
+        btnPreview.Text, btnPreview.BackgroundColor3 = "Hologram Preview Configuration: Active", Color3.fromRGB(155, 80, 180)
     else
-        btnPreview.Text = "Hologram Preview Configuration: Disabled"
-        btnPreview.BackgroundColor3 = Color3.fromRGB(110, 110, 115)
+        btnPreview.Text, btnPreview.BackgroundColor3 = "Hologram Preview Configuration: Disabled", Color3.fromRGB(110, 110, 115)
     end
     updateRealtimeVisualizerRing()
 end)
@@ -495,3 +486,135 @@ uiData.Mouse = Mouse
 uiData.RunService = RunService
 uiData.LocalPlayer = LocalPlayer
 -- // END OF FILE: Part_3_Physics.lua //
+
+-- =============================================================================
+-- PLACEMENT PIPELINE: TARGET SELECTION & SERVER PLACEMENT NETWORK
+-- =============================================================================
+local Players = game:GetService("Players")
+local uiData = _G.CircleBuilderUI_SharedData
+local colorData = _G.ActiveCircleBuilderColorData
+
+if not uiData or not uiData.updateRealtimeVisualizerRing then
+    error("Run Part 3 first.")
+end
+
+local inputRadius = uiData.inputRadius
+local inputSteps = uiData.inputSteps
+local inputSizeY = uiData.inputSizeY
+local statusLabel = uiData.statusLabel
+local btnPreview = uiData.btnPreview
+local btnBuild = uiData.btnBuild
+local previewFolder = uiData.previewFolder
+local btnSelect = uiData.btnSelect
+local selectionBox = uiData.selectionBox
+local ColorPanel = uiData.ColorPanel
+local HelpPanel = uiData.HelpPanel
+local Mouse = uiData.Mouse
+local RunService = uiData.RunService
+local LocalPlayer = uiData.LocalPlayer
+
+local isSelecting = false
+local blockName = "PlasticBlock"
+
+btnSelect.MouseButton1Click:Connect(function()
+    if isSelecting then return end
+    isSelecting = true
+    statusLabel.Text, statusLabel.TextColor3, btnSelect.Text = "Hover over canvas plot area and select node...", Color3.fromRGB(240, 180, 20), "Awaiting Target Confirmation..."
+    
+    local renderConnection, clickConnection
+    renderConnection = RunService.RenderStepped:Connect(function()
+        local target = Mouse.Target
+        if target and target:IsA("BasePart") then
+            selectionBox.Adornee = target
+        else
+            selectionBox.Adornee = nil
+        end
+    end)
+    
+    clickConnection = Mouse.Button1Down:Connect(function()
+        local target = Mouse.Target
+        if target and target:IsA("BasePart") then
+            uiData.selectedCenterPos = target.Position
+            statusLabel.Text = "Anchor Node Position Synchronized: " .. target.Name
+            statusLabel.TextColor3 = Color3.fromRGB(80, 240, 80)
+            renderConnection:Disconnect()
+            clickConnection:Disconnect()
+            selectionBox.Adornee = nil
+            isSelecting = false
+            btnSelect.Text = "Select Center Target Block"
+            uiData.updateRealtimeVisualizerRing()
+        end
+    end)
+end)
+
+btnBuild.MouseButton1Click:Connect(function()
+    local selectedCenterPos = uiData.selectedCenterPos
+    if isSelecting or not selectedCenterPos then return end
+    
+    local radius = tonumber(inputRadius.Text) or 20
+    local steps = tonumber(inputSteps.Text) or 30
+    local sizeY = tonumber(inputSizeY.Text) or 2
+    local circumference = 2 * math.pi * radius
+    local sizeZ = circumference / steps
+    local sizeX = (2 * radius * math.tan(math.pi / steps)) + 0.02
+    
+    local function findRemote(tName)
+        local tl = LocalPlayer.Backpack:FindFirstChild(tName) or (LocalPlayer.Character and LocalPlayer.Character:FindFirstChild(tName))
+        return tl and tl:FindFirstChild("RF")
+    end
+    
+    local bRF, sRF, pRF = findRemote("BuildingTool"), findRemote("ScalingTool"), findRemote("PaintingTool")
+    if not bRF or not sRF or not pRF then
+        statusLabel.Text, statusLabel.TextColor3 = "Hardware Fault: Missing active utilities!", Color3.fromRGB(255, 80, 80)
+        return
+    end
+    
+    btnPreview.Text, btnPreview.BackgroundColor3 = "Hologram Preview Configuration: Disabled", Color3.fromRGB(110, 110, 115)
+    previewFolder:ClearAllChildren()
+    ColorPanel.Visible = false
+    HelpPanel.Visible = false
+    btnBuild.Text, btnBuild.Active = "Constructing Active Sector Matrix...", false
+    
+    local folder = workspace:WaitForChild("Blocks", 5):WaitForChild(LocalPlayer.Name, 5)
+    
+    for i = 1, steps do
+        local angle = (i / steps) * math.pi * 2
+        local targetPlacementPos = Vector3.new(selectedCenterPos.X + math.cos(angle) * radius, selectedCenterPos.Y, selectedCenterPos.Z + math.sin(angle) * radius)
+        local pCF, hCF = CFrame.lookAt(targetPlacementPos, selectedCenterPos), CFrame.new(targetPlacementPos) * CFrame.Angles(0, angle, 0)
+        local initialChildren = folder:GetChildren()
+        
+        bRF:InvokeServer(blockName, 8001, Instance.new("Part", nil), pCF, true, hCF, false)
+        
+        local dynamicBlockPath, retries = nil, 0
+        while not dynamicBlockPath and retries < 30 do
+            task.wait(0.01)
+            local currentChildren = folder:GetChildren()
+            if #currentChildren > #initialChildren then
+                dynamicBlockPath = currentChildren[#currentChildren]
+            end
+            retries = retries + 1
+        end
+        
+        if dynamicBlockPath then
+            local sVec = Vector3.new(sizeX, sizeY, sizeZ)
+            sRF:InvokeServer(dynamicBlockPath, sVec, pCF)
+            task.wait(0.01)
+            
+            local col = colorData.ColorObject
+            local args = {
+                {
+                    { dynamicBlockPath, col },
+                    { dynamicBlockPath, col },
+                    { dynamicBlockPath, col },
+                    { dynamicBlockPath, col }
+                }
+            }
+            pRF:InvokeServer(unpack(args))
+        end
+        task.wait(0.03)
+    end
+    
+    btnBuild.Text, btnBuild.Active = "Commence Circle Construction", true
+    statusLabel.Text, statusLabel.TextColor3 = "Matrix Sequence Completed!", Color3.fromRGB(80, 240, 80)
+end)
+-- // END OF FILE: Part_4_Engine.lua //
