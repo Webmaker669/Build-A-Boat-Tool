@@ -507,6 +507,10 @@ local LocalPlayer = uiData.LocalPlayer
 local isSelecting = false
 local blockName = "PlasticBlock"
 
+-- Wait for the local data folder and the specific item value to load safely
+local dataFolder = LocalPlayer:WaitForChild("Data", 5)
+local dynamicValueObject = dataFolder and dataFolder:WaitForChild("PlasticBlock", 5)
+
 btnSelect.MouseButton1Click:Connect(function()
 	if isSelecting then return end
 	isSelecting = true
@@ -542,6 +546,14 @@ btnBuild.MouseButton1Click:Connect(function()
 	local selectedCenterPos = uiData.selectedCenterPos
 	if isSelecting or not selectedCenterPos then return end
 	
+	-- FIX: Dynamically grabs your live block data value, defaulting to 8001 if the folder is missing
+	local targetValueId = 8001
+	if dynamicValueObject and dynamicValueObject:IsA("ValueBase") then
+		targetValueId = dynamicValueObject.Value
+	else
+		warn("Circle Builder: Could not find LocalPlayer.Data.PlasticBlock! Using 8001 fallback value.")
+	end
+	
 	local radius = tonumber(inputRadius.Text) or 20
 	local steps = tonumber(inputSteps.Text) or 30
 	local sizeY = tonumber(inputSizeY.Text) or 2
@@ -574,7 +586,8 @@ btnBuild.MouseButton1Click:Connect(function()
 		local pCF, hCF = CFrame.lookAt(targetPlacementPos, selectedCenterPos), CFrame.new(targetPlacementPos) * CFrame.Angles(0, angle, 0)
 		local initialChildren = folder:GetChildren()
 		
-		bRF:InvokeServer(blockName, 8001, Instance.new("Part", nil), pCF, true, hCF, false)
+		-- FIX: Passes your dynamic value variable instead of the hardcoded 8001 number integer
+		bRF:InvokeServer(blockName, targetValueId, Instance.new("Part", nil), pCF, true, hCF, false)
 		
 		local dynamicBlockPath, retries = nil, 0
 		while not dynamicBlockPath and retries < 30 do
@@ -609,3 +622,4 @@ btnBuild.MouseButton1Click:Connect(function()
 	statusLabel.Text, statusLabel.TextColor3 = "Matrix Sequence Completed!", Color3.fromRGB(80, 240, 80)
 end)
 -- // END OF FILE: Part_4_Engine.lua //
+
