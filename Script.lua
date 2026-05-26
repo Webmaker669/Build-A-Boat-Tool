@@ -282,7 +282,7 @@ local btnColorPicker = uiData.btnColorPicker local statusLabel = uiData.statusLa
 local btnSelect = uiData.btnSelect local btnPreview = uiData.btnPreview local btnBuild = uiData.btnBuild
 local ColorIndicator = uiData.ColorIndicator local IndicatorText = uiData.IndicatorText
 local ColorPanel = uiData.ColorPanel local HelpPanel = uiData.HelpPanel
-local hexBox = uiData.hexBox local rLabel, rTrack, rBtn = uiData.rLabel, uiData.rTrack, rBtn
+local hexBox = uiData.hexBox local rLabel, rTrack, rBtn = uiData.rLabel, uiData.rTrack, uiData.rBtn
 local gLabel, gTrack, gBtn = uiData.gLabel, uiData.gTrack, uiData.gBtn
 local bLabel, bTrack, bBtn = uiData.bLabel, uiData.bTrack, uiData.bBtn
 
@@ -336,7 +336,8 @@ local function updateRealtimeVisualizerRing()
         local targetPlacementPos = Vector3.new(selectedCenterPos.X + math.cos(angle) * radius, selectedCenterPos.Y, selectedCenterPos.Z + math.sin(angle) * radius)
         local hPart = Instance.new("Part") hPart.Size = Vector3.new(sizeX, sizeY, sizeZ)
         hPart.CFrame = CFrame.lookAt(targetPlacementPos, selectedCenterPos) hPart.Color = currentColor
-        hPart.Transparency = 0.7 hPart.Anchored = true hPart.CanCollide = false hPart.Material = Enum.Material.ForceField hPart.Parent = previewFolder
+        hPart.Transparency = 0.5 hPart.Anchored = true hPart.CanCollide = false hPart.Material = Enum.Material.SmoothPlastic hPart.Parent = previewFolder
+        local sb = Instance.new("SelectionBox", hPart) sb.Adornee = hPart sb.Color3 = currentColor sb.LineThickness = 0.02
     end
 end
 
