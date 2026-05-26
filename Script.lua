@@ -11,7 +11,8 @@ ScreenGui.Name = "CircleBuilderUI"
 ScreenGui.ResetOnSpawn = false
 
 local MainFrame = Instance.new("Frame", ScreenGui)
-MainFrame.Size = UDim2.new(0, 330, 0, 560)
+-- FIX: Expanded window frame canvas dimension bounds gracefully to 600px height to prevent text overflows
+MainFrame.Size = UDim2.new(0, 330, 0, 600)
 MainFrame.Position = UDim2.new(0.05, 0, 0.15, 0)
 MainFrame.BackgroundColor3 = Color3.fromRGB(28, 28, 32)
 MainFrame.BorderSizePixel = 0
@@ -85,12 +86,13 @@ local function createInputField(labelText, yPos, defaultValue, editable)
 	return box
 end
 
-local inputRadius = createInputField("Circle Radius / Range:", 60, "20", true)
-local inputSteps = createInputField("Total Parts Count:", 100, "30", true)
-local inputSizeY = createInputField("Block Height (Y):", 140, "2", true)
-local inputBlockType = createInputField("Active Block Type:", 180, "PlasticBlock", true)
-local inputSizeX = createInputField("Calculated Width (X):", 220, "0.00", false)
-local inputSizeZ = createInputField("Calculated Depth (Z):", 260, "0.00", false)
+-- FIX: Spacing incremented cleanly in uniform 42-pixel steps to completely stop text boxes from overlapping
+local inputRadius = createInputField("Circle Radius / Range:", 55, "20", true)
+local inputSteps = createInputField("Total Parts Count:", 97, "30", true)
+local inputSizeY = createInputField("Block Height (Y):", 139, "2", true)
+local inputBlockType = createInputField("Active Block Type:", 181, "PlasticBlock", true)
+local inputSizeX = createInputField("Calculated Width (X):", 223, "0.00", false)
+local inputSizeZ = createInputField("Calculated Depth (Z):", 265, "0.00", false)
 
 _G.CircleBuilderUI_SharedData = {
 	MainFrame = MainFrame,
@@ -124,7 +126,7 @@ local colorData = _G.ActiveCircleBuilderColorData
 
 local colorLabel = Instance.new("TextLabel", MainFrame)
 colorLabel.Size = UDim2.new(0, 150, 0, 30)
-colorLabel.Position = UDim2.new(0, 15, 0, 260)
+colorLabel.Position = UDim2.new(0, 15, 0, 307) -- Shifted down safely
 colorLabel.Text = "Active Build Color:"
 colorLabel.TextColor3 = Color3.fromRGB(190, 190, 195)
 colorLabel.TextSize = 13
@@ -134,16 +136,15 @@ colorLabel.Font = Enum.Font.Gotham
 
 local btnColorPicker = Instance.new("TextButton", MainFrame)
 btnColorPicker.Size = UDim2.new(0, 130, 0, 28)
-btnColorPicker.Position = UDim2.new(0, 175, 0, 260)
+btnColorPicker.Position = UDim2.new(0, 175, 0, 307)
 btnColorPicker.Text = ""
 btnColorPicker.Font = Enum.Font.GothamBold
 btnColorPicker.BackgroundColor3 = colorData.ColorObject
 Instance.new("UICorner", btnColorPicker).CornerRadius = UDim.new(0, 5)
 
--- Spacing fixes applied below to prevent component overlaps
 local statusLabel = Instance.new("TextLabel", MainFrame)
 statusLabel.Size = UDim2.new(1, -30, 0, 30)
-statusLabel.Position = UDim2.new(0, 15, 0, 310)
+statusLabel.Position = UDim2.new(0, 15, 0, 345)
 statusLabel.Text = "Center Target Block: Not Selected"
 statusLabel.TextColor3 = Color3.fromRGB(240, 90, 90)
 statusLabel.TextSize = 12
@@ -164,9 +165,9 @@ local function createButton(text, yPos, color)
 	return btn
 end
 
-local btnSelect = createButton("Select Center Target Block", 345, Color3.fromRGB(0, 122, 215))
-local btnPreview = createButton("Hologram Preview Configuration: Disabled", 388, Color3.fromRGB(110, 110, 115))
-local btnBuild = createButton("Commence Circle Construction", 431, Color3.fromRGB(46, 139, 87))
+local btnSelect = createButton("Select Center Target Block", 385, Color3.fromRGB(0, 122, 215))
+local btnPreview = createButton("Hologram Preview Configuration: Disabled", 428, Color3.fromRGB(110, 110, 115))
+local btnBuild = createButton("Commence Circle Construction", 471, Color3.fromRGB(46, 139, 87))
 
 local HelpPanel = Instance.new("Frame", MainFrame)
 HelpPanel.Name = "HelpSelectionPanel"
@@ -195,8 +196,8 @@ HelpText.TextSize = 12
 HelpText.Font = Enum.Font.SourceSans
 HelpText.RichText = true
 HelpText.TextWrapped = true
+HelpText.TextYAlignment = Enum.TextXAlignment.Left
 HelpText.TextYAlignment = Enum.TextYAlignment.Top
-HelpText.TextXAlignment = Enum.TextXAlignment.Left
 HelpText.BackgroundTransparency = 1
 
 local ColorPanel = Instance.new("Frame", MainFrame)
@@ -293,7 +294,7 @@ uiData.HelpPanel = HelpPanel
 -- // END OF FILE: Part_2_Submenus.lua //
 
 -- =============================================================================
--- INTERACTIVE SUBSYSTEMS: HOLOGRAM RESPONSIVENESS & INPUT TRACKING
+-- INTERFACE SUBSYSTEMS: HOLOGRAM RESPONSIVENESS & INPUT TRACKING
 -- =============================================================================
 local CoreGui = game:GetService("CoreGui")
 local RunService = game:GetService("RunService")
@@ -358,6 +359,9 @@ CloseBtn.MouseButton1Click:Connect(function()
 	ReopenButton.Visible = true
 	ColorPanel.Visible = false
 	HelpPanel.Visible = false
+	if MainFrame:FindFirstChild("BlockSelectionPanel") then
+		MainFrame.BlockSelectionPanel.Visible = false
+	end
 end)
 
 ReopenButton.MouseButton1Click:Connect(function()
@@ -367,11 +371,17 @@ end)
 
 btnColorPicker.MouseButton1Click:Connect(function()
 	HelpPanel.Visible = false
+	if MainFrame:FindFirstChild("BlockSelectionPanel") then
+		MainFrame.BlockSelectionPanel.Visible = false
+	end
 	ColorPanel.Visible = not ColorPanel.Visible
 end)
 
 HelpBtn.MouseButton1Click:Connect(function()
 	ColorPanel.Visible = false
+	if MainFrame:FindFirstChild("BlockSelectionPanel") then
+		MainFrame.BlockSelectionPanel.Visible = false
+	end
 	HelpPanel.Visible = not HelpPanel.Visible
 end)
 
@@ -485,7 +495,7 @@ uiData.LocalPlayer = LocalPlayer
 -- // END OF FILE: Part_3_Physics.lua //
 
 -- =============================================================================
--- PART 4: DATA FIELD SYNCHRONIZATION & QUANTITY SYSTEM TRACKING
+-- PART 4: COMPREHENSIVE SELECTION MENU SLIDER & LOCAL PLAYER INVENTORY DATA
 -- =============================================================================
 local Players = game:GetService("Players")
 local LocalPlayer = Players.LocalPlayer
@@ -503,21 +513,84 @@ local btnSelect = uiData.btnSelect
 local btnPreview = uiData.btnPreview
 local btnBuild = uiData.btnBuild
 local inputBlockType = uiData.inputBlockType
+local ColorPanel = uiData.ColorPanel
+local HelpPanel = uiData.HelpPanel
 
 local dataFolder = LocalPlayer:WaitForChild("Data", 5)
 
--- FIX: Perfect pixel offsets to completely stop text labels from overlapping
-statusLabel.Position = UDim2.new(0, 15, 0, 310)
-btnSelect.Position = UDim2.new(0, 15, 0, 345)
-btnPreview.Position = UDim2.new(0, 15, 0, 388)
-btnBuild.Position = UDim2.new(0, 15, 0, 431)
+-- FIX: Re-padded lower action buttons cleanly downwards so nothing overlaps your text boxes
+statusLabel.Position = UDim2.new(0, 15, 0, 345)
+btnSelect.Position = UDim2.new(0, 15, 0, 385)
+btnPreview.Position = UDim2.new(0, 15, 0, 428)
+btnBuild.Position = UDim2.new(0, 15, 0, 471)
 
--- Export folder references out globally so Part 5 can communicate instantly
-uiData.dataFolder = dataFolder
+-- NEW/RESTORED: Material Selector window container pane that behaves exactly like the help panel side panels
+local BlockPanel = Instance.new("Frame", MainFrame)
+BlockPanel.Name = "BlockSelectionPanel"
+BlockPanel.Size = UDim2.new(0, 240, 1, 0)
+BlockPanel.Position = UDim2.new(1, 10, 0, 0)
+BlockPanel.BackgroundColor3 = Color3.fromRGB(34, 34, 38)
+BlockPanel.BorderSizePixel = 0
+BlockPanel.Visible = false
+Instance.new("UICorner", BlockPanel).CornerRadius = UDim.new(0, 10)
 
--- // END OF FILE: Part_4_Tracking.lua //
+local PanelTitle = Instance.new("TextLabel", BlockPanel)
+PanelTitle.Size = UDim2.new(1, 0, 0, 40)
+PanelTitle.Text = "AVAILABLE BUILDING MATERIALS"
+PanelTitle.TextColor3 = Color3.fromRGB(255, 255, 255)
+PanelTitle.TextSize = 11
+PanelTitle.Font = Enum.Font.GothamBold
+PanelTitle.BackgroundColor3 = Color3.fromRGB(44, 44, 50)
+Instance.new("UICorner", PanelTitle).CornerRadius = UDim.new(0, 10)
 
--- =============================================================================
+local ScrollingFrame = Instance.new("ScrollingFrame", BlockPanel)
+ScrollingFrame.Size = UDim2.new(1, -20, 1, -60)
+ScrollingFrame.Position = UDim2.new(0, 10, 0, 50)
+ScrollingFrame.BackgroundTransparency = 1
+ScrollingFrame.BorderSizePixel = 0
+ScrollingFrame.ScrollBarThickness = 4
+ScrollingFrame.CanvasSize = UDim2.new(0, 0, 0, 0)
+ScrollingFrame.AutomaticCanvasSize = Enum.AutomaticSize.Y
+
+local UIListLayout = Instance.new("UIListLayout", ScrollingFrame)
+UIListLayout.Padding = UDim.new(0, 4)
+UIListLayout.SortOrder = Enum.SortOrder.Name
+
+-- Clicking inside the Active Block Type text field box will now slide out the popup selection menu instantly!
+inputBlockType.Focused:Connect(function()
+	ColorPanel.Visible = false
+	HelpPanel.Visible = false
+	BlockPanel.Visible = true
+end)
+
+local function updateInventoryLayout()
+	for _, child in ipairs(ScrollingFrame:GetChildren()) do
+		if child:IsA("TextButton") then
+			child:Destroy()
+		end
+	end
+	
+	for _, item in ipairs(dataFolder:GetChildren()) do
+		-- Only display items that have a balance higher than 0, filtering out tools
+		if item:IsA("ValueBase") and item.Value > 0 then
+			if string.find(item.Name, "Tool") then
+				continue
+			end
+			
+			local itemBtn = Instance.new("TextButton", ScrollingFrame)
+			itemBtn.Size = UDim2.new(1, -5, 0, 30)
+			itemBtn.Text = "  " .. item.Name .. " (" .. tostring(item.Value) .. ")"
+			itemBtn.TextColor3 = (inputBlockType.Text == item.Name) and Color3.fromRGB(255, 255, 255) or Color3.fromRGB(190, 190, 195)
+			itemBtn.BackgroundColor3 = (inputBlockType.Text == item.Name) and Color3.fromRGB(0, 122, 215) or Color3.fromRGB(44, 44, 50)
+			itemBtn.Font = Enum.Font.GothamSemibold
+			itemBtn.TextSize = 11
+			itemBtn.TextXAlignment = Enum.TextXAlignment.Left
+			itemBtn.BorderSizePixel = 0
+			Instance.new("UICorner", itemBtn).CornerRadius = UDim.new(0, 4)
+			
+			item
+
+			-- =============================================================================
 -- PART 5: RAYCAST TARGET LOCKS & SERVER PLACEMENT NETWORK PIPES
 -- =============================================================================
 local Players = game:GetService("Players")
@@ -544,12 +617,13 @@ local btnSelect = uiData.btnSelect
 local selectionBox = uiData.selectionBox
 local ColorPanel = uiData.ColorPanel
 local HelpPanel = uiData.HelpPanel
+local BlockPanel = uiData.BlockPanel
 local dataFolder = uiData.dataFolder
 
 local isSelecting = false
 local folder = workspace:WaitForChild("Blocks", 5):WaitForChild(LocalPlayer.Name, 5)
 
--- Raycast Crosshair coordinate vector tracking routines
+-- Raycast crosshair placement point calculations connection
 btnSelect.MouseButton1Click:Connect(function()
 	if isSelecting then return end
 	isSelecting = true
@@ -581,7 +655,7 @@ btnSelect.MouseButton1Click:Connect(function()
 	end)
 end)
 
--- Construction deploy engine invocation routines
+-- Main build trigger network connection loop invocation
 btnBuild.MouseButton1Click:Connect(function()
 	local selectedCenterPos = uiData.selectedCenterPos
 	if isSelecting or not selectedCenterPos then return end
@@ -589,7 +663,7 @@ btnBuild.MouseButton1Click:Connect(function()
 	local selectedBlockString = tostring(inputBlockType.Text)
 	local blockTrackValueInstance = dataFolder:FindFirstChild(selectedBlockString)
 	
-	-- Verify user has blocks left inside Data folder before running building cycles
+	-- Fail sequence gracefully if total inventory metrics show 0 parts left
 	if not blockTrackValueInstance or (blockTrackValueInstance:IsA("ValueBase") and blockTrackValueInstance.Value <= 0) then
 		statusLabel.Text = "Build Failed: Out of " .. selectedBlockString .. "!"
 		statusLabel.TextColor3 = Color3.fromRGB(255, 80, 80)
@@ -619,11 +693,11 @@ btnBuild.MouseButton1Click:Connect(function()
 	previewFolder:ClearAllChildren()
 	ColorPanel.Visible = false
 	HelpPanel.Visible = false
+	BlockPanel.Visible = false
 	
 	btnBuild.Text, btnBuild.Active = "Constructing Active Sector Matrix...", false
 	
 	for i = 1, steps do
-		-- Safety cutoff instantly pauses if block data inventory hits zero mid-air
 		if blockTrackValueInstance and blockTrackValueInstance.Value <= 0 then
 			statusLabel.Text = "Interrupted: Ran out of " .. selectedBlockString .. "!"
 			statusLabel.TextColor3 = Color3.fromRGB(255, 80, 80)
@@ -636,7 +710,7 @@ btnBuild.MouseButton1Click:Connect(function()
 		local pCF, hCF = CFrame.lookAt(targetPlacementPos, selectedCenterPos), CFrame.new(targetPlacementPos) * CFrame.Angles(0, angle, 0)
 		local initialChildren = folder:GetChildren()
 		
-		-- PASSES USER'S EXACT LIVE INVENTORY COUNT DIRECTLY INTO THE REMOTE CALL PARAMETER
+		-- Passes your selected material name along with your live inventory total value straight down into the remote arguments
 		bRF:InvokeServer(selectedBlockString, blockTrackValueInstance.Value, Instance.new("Part", nil), pCF, true, hCF, false)
 		
 		local dynamicBlockPath, retries = nil, 0
