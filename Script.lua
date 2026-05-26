@@ -1,5 +1,5 @@
 -- =============================================================================
--- PART 1: SYSTEM SETUP: WINDOW FRAME & INTERFACE CONTROLS
+-- SYSTEM SETUP: WINDOW FRAME & INTERFACE CONTROLS
 -- =============================================================================
 local CoreGui = game:GetService("CoreGui")
 if CoreGui:FindFirstChild("CircleBuilderUI") then
@@ -11,7 +11,7 @@ ScreenGui.Name = "CircleBuilderUI"
 ScreenGui.ResetOnSpawn = false
 
 local MainFrame = Instance.new("Frame", ScreenGui)
-MainFrame.Size = UDim2.new(0, 330, 0, 580) -- Height updated to fit all layout modules
+MainFrame.Size = UDim2.new(0, 330, 0, 520)
 MainFrame.Position = UDim2.new(0.05, 0, 0.15, 0)
 MainFrame.BackgroundColor3 = Color3.fromRGB(28, 28, 32)
 MainFrame.BorderSizePixel = 0
@@ -32,7 +32,7 @@ Instance.new("UICorner", ReopenButton).CornerRadius = UDim.new(0, 6)
 
 local Title = Instance.new("TextLabel", MainFrame)
 Title.Size = UDim2.new(1, 0, 0, 45)
-Title.Text = "  CIRCLE BUILDER SUITE"
+Title.Text = " CIRCLE BUILDER SUITE"
 Title.TextColor3 = Color3.fromRGB(255, 255, 255)
 Title.TextSize = 12
 Title.Font = Enum.Font.GothamBold
@@ -112,11 +112,11 @@ _G.ActiveCircleBuilderColorData = {
 -- // END OF FILE: Part_1_UI_Base.lua //
 
 -- =============================================================================
--- PART 2: INTERFACE LAYOUTS: SUBMENUS & OPERATION MANUALS
+-- INTERFACE LAYOUTS: SUBMENUS & OPERATION MANUALS
 -- =============================================================================
 local uiData = _G.CircleBuilderUI_SharedData
-if not uiData or not uiData.MainFrame then 
-	error("Run Part 1 first.") 
+if not uiData or not uiData.MainFrame then
+	error("Run Part 1 first.")
 end
 
 local MainFrame = uiData.MainFrame
@@ -164,8 +164,8 @@ local function createButton(text, yPos, color)
 end
 
 local btnSelect = createButton("Select Center Target Block", 335, Color3.fromRGB(0, 122, 215))
-local btnPreview = createButton("Hologram Preview Configuration: Disabled", 427, Color3.fromRGB(110, 110, 115))
-local btnBuild = createButton("Commence Circle Construction", 478, Color3.fromRGB(46, 139, 87))
+local btnPreview = createButton("Hologram Preview Configuration: Disabled", 376, Color3.fromRGB(110, 110, 115))
+local btnBuild = createButton("Commence Circle Construction", 417, Color3.fromRGB(46, 139, 87))
 
 local HelpPanel = Instance.new("Frame", MainFrame)
 HelpPanel.Name = "HelpSelectionPanel"
@@ -286,10 +286,11 @@ uiData.HelpPanel = HelpPanel
 -- // END OF FILE: Part_2_Submenus.lua //
 
 -- =============================================================================
--- PART 3: INTERACTIVE SUBSYSTEMS: HOLOGRAM RESPONSIVENESS & MATERIAL PREVIEWS
+-- PART 3: HOLOGRAM RESPONSIVENESS & REPLICATED STORAGE MODEL PREVIEWS
 -- =============================================================================
 local CoreGui = game:GetService("CoreGui")
 local RunService = game:GetService("RunService")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Players = game:GetService("Players")
 local LocalPlayer = Players.LocalPlayer
 local Mouse = LocalPlayer:GetMouse()
@@ -298,7 +299,7 @@ local uiData = _G.CircleBuilderUI_SharedData
 local colorData = _G.ActiveCircleBuilderColorData
 
 if not uiData or not uiData.btnBuild then 
-	error("Run Part 2 first.") 
+	error("Critical Sequence Interrupted: Run Part 2 first.") 
 end
 
 local MainFrame = uiData.MainFrame
@@ -316,6 +317,7 @@ local btnSelect = uiData.btnSelect
 local btnPreview = uiData.btnPreview
 local btnBuild = uiData.btnBuild
 local ColorIndicator = uiData.ColorIndicator
+local IndicatorText = uiData.IndicatorText
 local ColorPanel = uiData.ColorPanel
 local HelpPanel = uiData.HelpPanel
 local hexBox = uiData.hexBox
@@ -323,17 +325,7 @@ local rLabel, rTrack, rBtn = uiData.rLabel, uiData.rTrack, uiData.rBtn
 local gLabel, gTrack, gBtn = uiData.gLabel, uiData.gTrack, uiData.gBtn
 local bLabel, bTrack, bBtn = uiData.bLabel, uiData.bTrack, uiData.bBtn
 
-local CopyBox = Instance.new("TextBox", MainFrame)
-CopyBox.Size = UDim2.new(1, -30, 0, 32)
-CopyBox.Position = UDim2.new(0, 15, 1, -45)
-CopyBox.Text = "https://discord.gg"
-CopyBox.TextColor3 = Color3.fromRGB(114, 137, 218)
-CopyBox.BackgroundColor3 = Color3.fromRGB(44, 47, 51)
-CopyBox.Font = Enum.Font.GothamBold
-CopyBox.TextSize = 11
-CopyBox.ClearTextOnFocus = false
-CopyBox.TextEditable = false
-Instance.new("UICorner", CopyBox).CornerRadius = UDim.new(0, 6)
+local buildingPartsFolder = ReplicatedStorage:WaitForChild("BuildingParts")
 
 if workspace:FindFirstChild("CirclePreviewFolder") then 
 	workspace.CirclePreviewFolder:Destroy() 
@@ -346,6 +338,7 @@ local selectionBox = Instance.new("SelectionBox", CoreGui)
 selectionBox.Color3 = Color3.fromRGB(0, 255, 255)
 selectionBox.LineThickness = 0.04
 
+local isSelecting = false
 local showLivePreview = false
 
 CloseBtn.MouseButton1Click:Connect(function()
@@ -379,20 +372,6 @@ HelpBtn.MouseButton1Click:Connect(function()
 	HelpPanel.Visible = not HelpPanel.Visible
 end)
 
-local function getRobloxMaterial(tokenName)
-	if not tokenName then return Enum.Material.SmoothPlastic end
-	local cleanName = string.gsub(tokenName, "Block", "")
-	cleanName = string.gsub(cleanName, "Material", "")
-	local success, result = pcall(function()
-		return Enum.Material[cleanName]
-	end)
-	if success and result then
-		return result
-	else
-		return Enum.Material.SmoothPlastic
-	end
-end
-
 local function updateRealtimeVisualizerRing()
 	previewFolder:ClearAllChildren()
 	local center = uiData.selectedCenterPos
@@ -406,28 +385,51 @@ local function updateRealtimeVisualizerRing()
 	local sizeX = (2 * radius * math.tan(math.pi / steps)) + 0.02
 	
 	inputSizeX.Text, inputSizeZ.Text = string.format("%.3f", sizeX), string.format("%.3f", sizeZ)
+	
 	if not showLivePreview then return end
 	
-	local selectedMaterial = getRobloxMaterial(_G.SelectedBuildMaterialToken)
+	local targetBlockName = _G.SelectedBuildMaterialToken or "PlasticBlock"
+	local sourceTemplate = buildingPartsFolder:FindFirstChild(targetBlockName)
+	if not sourceTemplate then return end
 	
 	for i = 1, steps do
 		local angle = (i / steps) * math.pi * 2
 		local targetPlacementPos = Vector3.new(center.X + math.cos(angle) * radius, center.Y, center.Z + math.sin(angle) * radius)
+		local targetCFrame = CFrame.lookAt(targetPlacementPos, center)
 		
-		local hPart = Instance.new("Part")
-		hPart.Size = Vector3.new(sizeX, sizeY, sizeZ)
-		hPart.CFrame = CFrame.lookAt(targetPlacementPos, center)
-		hPart.Color = colorData.ColorObject
-		hPart.Transparency = 0.4
-		hPart.Anchored = true
-		hPart.CanCollide = false
-		hPart.Material = selectedMaterial
-		hPart.Parent = previewFolder
+		local hologramClone = sourceTemplate:Clone()
 		
-		local sb = Instance.new("SelectionBox", hPart)
-		sb.Adornee = hPart
-		sb.Color3 = colorData.ColorObject
-		sb.LineThickness = 0.01
+		if hologramClone:IsA("BasePart") then
+			hologramClone.Size = Vector3.new(sizeX, sizeY, sizeZ)
+			hologramClone.CFrame = targetCFrame
+			hologramClone.Color = colorData.ColorObject
+			hologramClone.Transparency = 0.5
+			hologramClone.Anchored = true
+			hologramClone.CanCollide = false
+			hologramClone.Parent = previewFolder
+			
+			local sb = Instance.new("SelectionBox", hologramClone)
+			sb.Adornee = hologramClone
+			sb.Color3 = colorData.ColorObject
+			sb.LineThickness = 0.01
+		elseif hologramClone:IsA("Model") then
+			hologramClone:PivotTo(targetCFrame)
+			
+			for _, part in ipairs(hologramClone:GetDescendants()) do
+				if part:IsA("BasePart") then
+					part.Color = colorData.ColorObject
+					part.Transparency = 0.5
+					part.Anchored = true
+					part.CanCollide = false
+					
+					local sb = Instance.new("SelectionBox", part)
+					sb.Adornee = part
+					sb.Color3 = colorData.ColorObject
+					sb.LineThickness = 0.01
+				end
+			end
+			hologramClone.Parent = previewFolder
+		end
 	end
 end
 
@@ -503,12 +505,14 @@ uiData.selectionBox = selectionBox
 uiData.Mouse = Mouse
 uiData.RunService = RunService
 uiData.LocalPlayer = LocalPlayer
+
 -- // END OF FILE: Part_3_Physics.lua //
 
 -- =============================================================================
--- PART 4: INTERFACE EXTENSIONS & INVENTORY DATA STREAMING
+-- PART 4: INTERFACE EXTENSIONS & REPLICATED STORAGE MODEL STREAMING
 -- =============================================================================
 local Players = game:GetService("Players")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local LocalPlayer = Players.LocalPlayer
 
 local uiData = _G.CircleBuilderUI_SharedData
@@ -527,6 +531,7 @@ local ColorPanel = uiData.ColorPanel
 local HelpPanel = uiData.HelpPanel
 
 local dataFolder = LocalPlayer:WaitForChild("Data")
+local buildingPartsFolder = ReplicatedStorage:WaitForChild("BuildingParts")
 
 -- Expand Main Frame size height configuration to ensure all buttons fit cleanly
 MainFrame.Size = UDim2.new(0, 330, 0, 580)
@@ -602,24 +607,28 @@ local function updateInventoryLayout()
 				continue
 			end
 			
-			local itemBtn = Instance.new("TextButton", ScrollingFrame)
-			itemBtn.Size = UDim2.new(1, -5, 0, 30)
-			itemBtn.Text = "  " .. item.Name .. " (" .. tostring(item.Value) .. ")"
-			itemBtn.TextColor3 = (_G.SelectedBuildMaterialToken == item.Name) and Color3.fromRGB(255, 255, 255) or Color3.fromRGB(190, 190, 195)
-			itemBtn.BackgroundColor3 = (_G.SelectedBuildMaterialToken == item.Name) and Color3.fromRGB(0, 122, 215) or Color3.fromRGB(44, 44, 50)
-			itemBtn.Font = Enum.Font.GothamSemibold
-			itemBtn.TextSize = 11
-			itemBtn.TextXAlignment = Enum.TextXAlignment.Left
-			itemBtn.BorderSizePixel = 0
-			Instance.new("UICorner", itemBtn).CornerRadius = UDim.new(0, 4)
-			
-			itemBtn.MouseButton1Click:Connect(function()
-				_G.SelectedBuildMaterialToken = item.Name
-				btnChangeBlock.Text = "Change Material: " .. item.Name
-				BlockPanel.Visible = false
-				updateInventoryLayout()
-				uiData.updateRealtimeVisualizerRing()
-			end)
+			-- Only create a button if the model actually exists inside BuildingParts folder
+			local targetModel = buildingPartsFolder:FindFirstChild(item.Name)
+			if targetModel then
+				local itemBtn = Instance.new("TextButton", ScrollingFrame)
+				itemBtn.Size = UDim2.new(1, -5, 0, 30)
+				itemBtn.Text = "  " .. item.Name .. " (" .. tostring(item.Value) .. ")"
+				itemBtn.TextColor3 = (_G.SelectedBuildMaterialToken == item.Name) and Color3.fromRGB(255, 255, 255) or Color3.fromRGB(190, 190, 195)
+				itemBtn.BackgroundColor3 = (_G.SelectedBuildMaterialToken == item.Name) and Color3.fromRGB(0, 122, 215) or Color3.fromRGB(44, 44, 50)
+				itemBtn.Font = Enum.Font.GothamSemibold
+				itemBtn.TextSize = 11
+				itemBtn.TextXAlignment = Enum.TextXAlignment.Left
+				itemBtn.BorderSizePixel = 0
+				Instance.new("UICorner", itemBtn).CornerRadius = UDim.new(0, 4)
+				
+				itemBtn.MouseButton1Click:Connect(function()
+					_G.SelectedBuildMaterialToken = item.Name
+					btnChangeBlock.Text = "Change Material: " .. item.Name
+					BlockPanel.Visible = false
+					updateInventoryLayout()
+					uiData.updateRealtimeVisualizerRing()
+				end)
+			end
 		end
 	end
 end
@@ -639,7 +648,7 @@ for _, item in ipairs(dataFolder:GetChildren()) do
 	end
 end
 
--- Export references out so Part 5 can communicate with these new objects
+-- Export references out so Parts 3 and 5 can communicate with these new objects
 uiData.btnChangeBlock = btnChangeBlock
 uiData.BlockPanel = BlockPanel
 
@@ -753,10 +762,11 @@ btnBuild.MouseButton1Click:Connect(function()
 		local hCF = CFrame.new(targetPlacementPos) * CFrame.Angles(0, angle, 0)
 		local initialChildren = folder:GetChildren()
 		
-		local blockNameString = tostring(_G.SelectedBuildMaterialToken)
+		-- Passes the exact string matching your item's name inside ReplicatedStorage
+		local blockNameString = tostring(_G.SelectedBuildMaterialToken or "PlasticBlock")
 		
 		local invokeArgs = {
-			blockNameString,       
+			blockNameString,       -- "WoodBlock", "PlasticBlock", etc.
 			1059,                  
 			selectedTargetParent,  
 			pCF,                   
@@ -767,13 +777,15 @@ btnBuild.MouseButton1Click:Connect(function()
 		
 		bRF:InvokeServer(unpack(invokeArgs))
 		
+		-- Dynamically monitors construction logs until the server handles the name change allocation
 		local dynamicBlockPath, retries = nil, 0
 		while not dynamicBlockPath and retries < 40 do
 			task.wait(0.01)
 			local currentChildren = folder:GetChildren()
 			if #currentChildren > #initialChildren then
 				local potentialBlock = currentChildren[#currentChildren]
-				if potentialBlock.Name == blockNameString then
+				-- Tracks either exact string matching or fallback models
+				if potentialBlock.Name == blockNameString or potentialBlock:IsA("Model") then
 					dynamicBlockPath = potentialBlock
 				end
 			end
@@ -809,6 +821,3 @@ btnBuild.MouseButton1Click:Connect(function()
 end)
 
 -- // END OF FILE: Part_5_Engine.lua //
-
--- // END OF FILE: Part_5_Engine.lua //
-
