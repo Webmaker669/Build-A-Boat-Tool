@@ -205,19 +205,19 @@ _G.CBuilder_Inventory = { BlockPanel = BlockPanel, dataFolder = dataFolder }
 -- // END OF FILE: Part_3.lua //
 
 -- =============================================================================
--- PART 4: OPERATIONAL DEPLOYMENT ARCHITECTURE PIPELINE
+-- PART 4: TARGET ANALYSIS & HOLOGRAM PREVIEW MATRIX
 -- =============================================================================
 local core = _G.CBuilder_CoreUI
 local buttons = _G.CBuilder_Buttons
 local invData = _G.CBuilder_Inventory
-if not core or not buttons or not invData then error("Critical Stack Trace Mismatch: Run Part 3 first.") end
+if not core or not buttons or not invData then error("Sequence Interrupted: Run Part 3 first.") end
 
 local RunService = game:GetService("RunService")
 local CoreGui = game:GetService("CoreGui")
 local LocalPlayer = game:GetService("Players").LocalPlayer
 local Mouse = LocalPlayer:GetMouse()
 
-local MainFrame, inputRadius, inputSteps, inputSizeY, inputBlockType, inputSizeX, inputSizeZ = core.MainFrame, core.inputRadius, core.inputSteps, core.inputSizeY, core.inputBlockType, core.inputSizeX, core.inputSizeZ
+local inputRadius, inputSteps, inputSizeY, inputBlockType, inputSizeX, inputSizeZ = core.inputRadius, core.inputSteps, core.inputSizeY, core.inputBlockType, core.inputSizeX, core.inputSizeZ
 local statusLabel, btnSelect, btnPreview, btnBuild = buttons.statusLabel, buttons.btnSelect, buttons.btnPreview, buttons.btnBuild
 local BlockPanel, dataFolder = invData.BlockPanel, invData.dataFolder
 
@@ -227,16 +227,16 @@ local selectedCenterPos, isSelecting, showLivePreview = nil, false, false
 
 local function updateRingVisuals()
 	previewFolder:ClearAllChildren()
-	if not selectedCenterPos then return end
+	if not _G.CBuilder_CenterPos then return end
 	local radius, steps, sizeY = tonumber(inputRadius.Text) or 20, tonumber(inputSteps.Text) or 30, tonumber(inputSizeY.Text) or 2
 	local sizeZ = (2 * math.pi * radius) / steps
 	local sizeX = (2 * radius * math.tan(math.pi / steps)) + 0.02
 	inputSizeX.Text, inputSizeZ.Text = string.format("%.3f", sizeX), string.format("%.3f", sizeZ)
-	if not showLivePreview then return end
+	if not _G.CBuilder_LivePreview then return end
 	for i = 1, steps do
 		local angle = (i / steps) * math.pi * 2
-		local p = Vector3.new(selectedCenterPos.X + math.cos(angle) * radius, selectedCenterPos.Y, selectedCenterPos.Z + math.sin(angle) * radius)
-		local hp = Instance.new("Part", previewFolder) hp.Size = Vector3.new(sizeX, sizeY, sizeZ) hp.CFrame = CFrame.lookAt(p, selectedCenterPos) hp.Color = Color3.new(1,1,1) hp.Transparency = 0.5 hp.Anchored = true hp.CanCollide = false
+		local p = Vector3.new(_G.CBuilder_CenterPos.X + math.cos(angle) * radius, _G.CBuilder_CenterPos.Y, _G.CBuilder_CenterPos.Z + math.sin(angle) * radius)
+		local hp = Instance.new("Part", previewFolder) hp.Size = Vector3.new(sizeX, sizeY, sizeZ) hp.CFrame = CFrame.lookAt(p, _G.CBuilder_CenterPos) hp.Color = Color3.new(1,1,1) hp.Transparency = 0.5 hp.Anchored = true hp.CanCollide = false
 		local sb = Instance.new("SelectionBox", hp) sb.Adornee = hp sb.Color3 = Color3.fromRGB(0, 255, 255) sb.LineThickness = 0.01
 	end
 end
@@ -250,21 +250,39 @@ btnSelect.MouseButton1Click:Connect(function()
 	rConn = RunService.RenderStepped:Connect(function() selectionBox.Adornee = Mouse.Target end)
 	cConn = Mouse.Button1Down:Connect(function()
 		local t = Mouse.Target if t and t:IsA("BasePart") then
-			selectedCenterPos = t.Position statusLabel.Text = "Target Locked: " .. t.Name statusLabel.TextColor3 = Color3.fromRGB(80, 240, 80)
+			_G.CBuilder_CenterPos = t.Position statusLabel.Text = "Target Locked: " .. t.Name statusLabel.TextColor3 = Color3.fromRGB(80, 240, 80)
 			rConn:Disconnect() cConn:Disconnect() selectionBox.Adornee = nil isSelecting = false btnSelect.Text = "Select Center Target Block" updateRingVisuals()
 		end
 	end)
 end)
 
 btnPreview.MouseButton1Click:Connect(function()
-	showLivePreview = not showLivePreview
-	btnPreview.Text = showLivePreview and "Hologram Preview Configuration: Active" or "Hologram Preview Configuration: Disabled"
-	btnPreview.BackgroundColor3 = showLivePreview and Color3.fromRGB(155, 80, 180) or Color3.fromRGB(110, 110, 115)
+	_G.CBuilder_LivePreview = not _G.CBuilder_LivePreview
+	btnPreview.Text = _G.CBuilder_LivePreview and "Hologram Preview Configuration: Active" or "Hologram Preview Configuration: Disabled"
+	btnPreview.BackgroundColor3 = _G.CBuilder_LivePreview and Color3.fromRGB(155, 80, 180) or Color3.fromRGB(110, 110, 115)
 	updateRingVisuals()
 end)
 
+_G.CBuilder_PipelineData = { previewFolder = previewFolder, folder = workspace:WaitForChild("Blocks", 5):WaitForChild(LocalPlayer.Name, 5) }
+-- // END OF FILE: Part_4.lua //
+
+-- =============================================================================
+-- PART 5: SERVER REMOTE PLACEMENT NETWORK PIPES
+-- =============================================================================
+local core = _G.CBuilder_CoreUI
+local buttons = _G.CBuilder_Buttons
+local invData = _G.CBuilder_Inventory
+local pipeline = _G.CBuilder_PipelineData
+if not core or not buttons or not invData or not pipeline then error("Sequence Interrupted: Run Part 4 first.") end
+
+local LocalPlayer = game:GetService("Players").LocalPlayer
+local MainFrame, inputRadius, inputSteps, inputSizeY, inputBlockType = core.MainFrame, core.inputRadius, core.inputSteps, core.inputSizeY, core.inputBlockType
+local statusLabel, btnBuild = buttons.statusLabel, buttons.btnBuild
+local BlockPanel, dataFolder = invData.BlockPanel, invData.dataFolder
+local previewFolder, folder = pipeline.previewFolder, pipeline.folder
+
 btnBuild.MouseButton1Click:Connect(function()
-	if isSelecting or not selectedCenterPos then return end
+	if not _G.CBuilder_CenterPos then return end
 	local blockStr = tostring(inputBlockType.Text)
 	local inventoryItem = dataFolder and dataFolder:FindFirstChild(blockStr)
 	if not inventoryItem or inventoryItem.Value <= 0 then statusLabel.Text = "Build Failed: Out of Blocks!" statusLabel.TextColor3 = Color3.fromRGB(255,80,80) return end
@@ -276,15 +294,15 @@ btnBuild.MouseButton1Click:Connect(function()
 	if not bRF or not sRF or not pRF then statusLabel.Text = "Missing Tools!" return end
 	
 	previewFolder:ClearAllChildren() BlockPanel.Visible = false btnBuild.Text, btnBuild.Active = "Constructing Active Sector Matrix...", false
-	local folder = workspace:WaitForChild("Blocks", 5):WaitForChild(LocalPlayer.Name, 5)
 	
 	for i = 1, steps do
 		if inventoryItem.Value <= 0 then statusLabel.Text = "Stopped: Empty Inventory!" statusLabel.TextColor3 = Color3.fromRGB(255,80,80) break end
 		local angle = (i / steps) * math.pi * 2
-		local p = Vector3.new(selectedCenterPos.X + math.cos(angle) * radius, selectedCenterPos.Y, selectedCenterPos.Z + math.sin(angle) * radius)
-		local pCF, hCF = CFrame.lookAt(p, selectedCenterPos), CFrame.new(p) * CFrame.Angles(0, angle, 0)
+		local p = Vector3.new(_G.CBuilder_CenterPos.X + math.cos(angle) * radius, _G.CBuilder_CenterPos.Y, _G.CBuilder_CenterPos.Z + math.sin(angle) * radius)
+		local pCF, hCF = CFrame.lookAt(p, _G.CBuilder_CenterPos), CFrame.new(p) * CFrame.Angles(0, angle, 0)
 		local initialCount = #folder:GetChildren()
 		
+		-- PASSES USER'S EXACT INVENTORY QUANTITY VALUE FROM YOUR DATA DATA TRACKER FOLDER
 		bRF:InvokeServer(blockStr, inventoryItem.Value, Instance.new("Part", nil), pCF, true, hCF, false)
 		
 		local newBlock, loops = nil, 0
@@ -298,4 +316,4 @@ btnBuild.MouseButton1Click:Connect(function()
 	btnBuild.Text, btnBuild.Active = "Commence Circle Construction", true
 	if statusLabel.Text ~= "Stopped: Empty Inventory!" then statusLabel.Text = "Matrix Sequence Completed!" statusLabel.TextColor3 = Color3.fromRGB(80, 240, 80) end
 end)
--- // END OF FILE: Part_4.lua //
+-- // END OF FILE: Part_5.lua //
