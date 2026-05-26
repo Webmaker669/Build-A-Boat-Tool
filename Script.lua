@@ -86,7 +86,6 @@ local inputSizeY  = createInputField("Block Height (Y):", 140, "2", true)
 local inputSizeX  = createInputField("Calculated Width (X):", 180, "0.00", false)
 local inputSizeZ  = createInputField("Calculated Depth (Z):", 220, "0.00", false)
 
--- FIXED: Clean global memory pointer to dump cached errors completely
 _G.CircleBuilderSuitePro_V2 = {
     MainFrame = MainFrame, inputRadius = inputRadius, inputSteps = inputSteps,
     inputSizeY = inputSizeY, inputSizeX = inputSizeX, inputSizeZ = inputSizeZ,
@@ -94,7 +93,7 @@ _G.CircleBuilderSuitePro_V2 = {
 }
 
 local uiData = _G.CircleBuilderSuitePro_V2
-if not uiData or not uiData.MainFrame then error("Run updated Part 1 block first.") end
+if not uiData or not uiData.MainFrame then error("Run Part 1 first.") end
 local MainFrame = uiData.MainFrame
 
 local colorLabel = Instance.new("TextLabel", MainFrame)
@@ -261,7 +260,7 @@ local LocalPlayer = Players.LocalPlayer
 local Mouse = LocalPlayer:GetMouse()
 
 local uiData = _G.CircleBuilderSuitePro_V2
-if not uiData or not uiData.btnBuild then error("Run updated Part 2 block first.") end
+if not uiData or not uiData.btnBuild then error("Run Part 2 first.") end
 
 local MainFrame = uiData.MainFrame local CloseBtn = uiData.CloseBtn local HelpBtn = uiData.HelpBtn local ReopenButton = uiData.ReopenButton
 local inputRadius = uiData.inputRadius local inputSteps = uiData.inputSteps
@@ -379,7 +378,7 @@ uiData.Mouse = Mouse uiData.RunService = RunService uiData.LocalPlayer = LocalPl
 
 local Players = game:GetService("Players")
 local uiData = _G.CircleBuilderSuitePro_V2
-if not uiData or not uiData.updateRealtimeVisualizerRing then error("Run updated Part 3 block first.") end
+if not uiData or not uiData.updateRealtimeVisualizerRing then error("Run Part 3 first.") end
 
 local inputRadius = uiData.inputRadius local inputSteps = uiData.inputSteps local inputSizeY = uiData.inputSizeY
 local statusLabel = uiData.statusLabel local btnPreview = uiData.btnPreview local btnBuild = uiData.btnBuild
