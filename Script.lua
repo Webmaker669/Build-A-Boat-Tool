@@ -29,8 +29,8 @@ local HelpPanel = uiData.HelpPanel
 local isSelecting = false
 local dataFolder = LocalPlayer:WaitForChild("Data")
 
--- FIX: Main Frame expanded to 560px height to prevent text crowding or clipping
-MainFrame.Size = UDim2.new(0, 330, 0, 560)
+-- FIX: Main Frame expanded to 580px height to prevent text crowding or layout overlap
+MainFrame.Size = UDim2.new(0, 330, 0, 580)
 
 -- NEW: Change Material button placed perfectly below "Select Center Target Block"
 local btnChangeBlock = Instance.new("TextButton", MainFrame)
@@ -44,11 +44,11 @@ btnChangeBlock.BackgroundColor3 = Color3.fromRGB(155, 80, 180)
 btnChangeBlock.BorderSizePixel = 0
 Instance.new("UICorner", btnChangeBlock).CornerRadius = UDim.new(0, 6)
 
--- FIX: Repositioned remaining operational elements with uniform structural padding
-btnPreview.Position = UDim2.new(0, 15, 0, 422)
-btnBuild.Position = UDim2.new(0, 15, 0, 468)
+-- FIX: Repositioned remaining lower elements down cleanly with consistent padding
+btnPreview.Position = UDim2.new(0, 15, 0, 427)
+btnBuild.Position = UDim2.new(0, 15, 0, 478)
 
--- NEW: Material Panel that opens horizontally on the right side (matching Help Panel geometry)
+-- NEW: Material Panel that opens horizontally on the right side (matching Help Panel mechanics)
 local BlockPanel = Instance.new("Frame", MainFrame)
 BlockPanel.Name = "BlockSelectionPanel"
 BlockPanel.Size = UDim2.new(0, 240, 1, 0)
@@ -80,7 +80,7 @@ local UIListLayout = Instance.new("UIListLayout", ScrollingFrame)
 UIListLayout.Padding = UDim.new(0, 4)
 UIListLayout.SortOrder = Enum.SortOrder.Name
 
--- FIX: Sets "PlasticBlock" as the strict initialization item token default
+-- FIX: Sets "PlasticBlock" as your fallback build item token initialization default
 _G.SelectedBuildMaterialToken = "PlasticBlock"
 
 -- =============================================================================
@@ -116,7 +116,7 @@ local function updateInventoryLayout()
 			itemBtn.BorderSizePixel = 0
 			Instance.new("UICorner", itemBtn).CornerRadius = UDim.new(0, 4)
 			
-			-- FIX: Updates the button label and sets placement material matching the clicked data folder item name
+			-- FIX: Updates the labels and changes your building block to match the item name exactly
 			itemBtn.MouseButton1Click:Connect(function()
 				_G.SelectedBuildMaterialToken = item.Name
 				btnChangeBlock.Text = "Change Material: " .. item.Name
@@ -132,7 +132,7 @@ dataFolder.ChildAdded:Connect(updateInventoryLayout)
 for _, item in ipairs(dataFolder:GetChildren()) do
 	if item:IsA("ValueBase") then
 		item.Changed:Connect(function()
-			-- FIX: Automatically falls back to default PlasticBlock if selected block value drops to 0
+			-- FIX: Reverts your selected active block back to default PlasticBlock if quantities run out
 			if _G.SelectedBuildMaterialToken == item.Name and item.Value <= 0 then
 				_G.SelectedBuildMaterialToken = "PlasticBlock"
 				btnChangeBlock.Text = "Change Material: PlasticBlock"
@@ -221,8 +221,12 @@ btnBuild.MouseButton1Click:Connect(function()
 		local pCF, hCF = CFrame.lookAt(targetPlacementPos, selectedCenterPos), CFrame.new(targetPlacementPos) * CFrame.Angles(0, angle, 0)
 		local initialChildren = folder:GetChildren()
 		
-		-- FIX: Dynamically invokes the server using the selected item name matching your data selection
-		bRF:InvokeServer(_G.SelectedBuildMaterialToken, 8001, Instance.new("Part", nil), pCF, true, hCF, false)
+		-- FIX: Generates an instance component with the exact name matched to your menu chosen selection variable token
+		local itemBlockInstance = Instance.new("Part")
+		itemBlockInstance.Name = _G.SelectedBuildMaterialToken
+		
+		-- FIX: Fires your custom clicked block selection token down into your game remote pipeline parameters
+		bRF:InvokeServer(_G.SelectedBuildMaterialToken, 8001, itemBlockInstance, pCF, true, hCF, false)
 		
 		local dynamicBlockPath, retries = nil, 0
 		while not dynamicBlockPath and retries < 30 do
