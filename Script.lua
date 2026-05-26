@@ -1,9 +1,7 @@
 local P = game:GetService("Players").LocalPlayer
 local UIS = game:GetService("UserInputService")
-local RS = game:GetService("ReplicatedStorage")
 local M = P:GetMouse()
 
--- Wait for character and GUI safely
 local sG = Instance.new("ScreenGui")
 sG.Name = "StudioUI"
 sG.ResetOnSpawn = false
@@ -14,15 +12,27 @@ local uC = true
 local sP = false
 local isMin = false
 
--- BaBFT stores your blocks here
-local buildsFolder = workspace:WaitForChild("Builds")
-local f = buildsFolder:WaitForChild(P.Name)
+local f = workspace:WaitForChild("Blocks"):WaitForChild(P.Name)
+
+local function getZone()
+    local team = P.Team
+    if team then
+        local zoneName = team.TeamColor.Name .. "Zone"
+        local zone = workspace:FindFirstChild(zoneName)
+        if zone then return zone end
+    end
+    for _, v in ipairs(workspace:GetChildren()) do
+        if v.Name:sub(-4) == "Zone" then
+            return v
+        end
+    end
+    return workspace
+end
 
 local pFld = Instance.new("Folder")
 pFld.Name = "CircleHologram"
 pFld.Parent = workspace
 
--- Main window
 local m = Instance.new("Frame")
 m.Parent = sG
 m.Size = UDim2.new(0, 340, 0, 320)
@@ -79,7 +89,6 @@ local cfCorner = Instance.new("UICorner")
 cfCorner.CornerRadius = UDim.new(0, 8)
 cfCorner.Parent = cf
 
--- Drag
 local drag = false
 local dInp, dStart, sPos
 
@@ -247,7 +256,6 @@ local function uP()
     local b  = tonumber(iB.Text) or 120
     local y  = tonumber(iY.Text) or 2
     local sZ = ((2 * math.pi * r) / b) + 0.02
-
     aZ.Text = string.format("%.3f", sZ)
     pFld:ClearAllChildren()
 
@@ -338,9 +346,6 @@ tB.MouseButton1Click:Connect(function()
     uP()
 end)
 
--- ============================================================
--- BUILD — rewritten for BaBFT's actual remote structure
--- ============================================================
 bD.MouseButton1Click:Connect(function()
     if not cCF then
         sC.Text = "SET CENTER FIRST!"
@@ -357,43 +362,73 @@ bD.MouseButton1Click:Connect(function()
     local sY = tonumber(iY.Text)  or 2.0
     local sX = tonumber(aX.Text)  or 0.05
     local sZ = tonumber(aZ.Text)  or 0.5
-    local col = cP.BackgroundColor3
 
     local ch = P.Character or P.CharacterAdded:Wait()
     local h  = ch:WaitForChild("Humanoid")
 
-    -- BaBFT remote location
-    local remote = RS:WaitForChild("RE"):WaitForChild("Hammer")
+    -- Detect zone from team at build time
+    local wZ = getZone()
 
     for i = 1, nB do
-        local a    = (i / nB) * (2 * math.pi)
-        local bCF  = cCF
-                   * CFrame.new(math.cos(a) * r, 0, math.sin(a) * r)
-                   * CFrame.Angles(0, -a, 0)
+        local a   = (i / nB) * (2 * math.pi)
+        local bCF = cCF
+                  * CFrame.new(math.cos(a) * r, 0, math.sin(a) * r)
+                  * CFrame.Angles(0, -a, 0)
 
-        -- 1) Place a block via BaBFT Hammer remote
-        --    Action "Place", material "SmoothPlastic", size, cframe
-        remote:FireServer("Place", "SmoothPlastic", Vector3.new(sX, sY, sZ), bCF)
-        task.wait(0.15)
+        -- STEP 1: Place
+        local t1 = ch:WaitForChild("BuildingTool")
+        h:EquipTool(t1)
+        task.wait(0.08)
 
-        -- 2) Find the newest block in our folder
+        local beforeCount = #f:GetChildren()
+
+        t1:WaitForChild("RF"):InvokeServer(
+            "PlasticBlock",
+            8001,
+            wZ,
+            CFrame.new(-10, 6.1, -20) * CFrame.Angles(0, -a, 0),
+            true,
+            bCF,
+            false
+        )
+
+        -- STEP 2: Wait for new block
         local pB = nil
-        local newest = 0
-        for _, v in ipairs(f:GetChildren()) do
-            -- BaBFT block instances tick upward; pick highest ID / last child
-            if v:IsA("BasePart") then
-                pB = v   -- last one wins; loop gives us newest on final iteration
+        local elapsed = 0
+        repeat
+            task.wait(0.05)
+            elapsed += 0.05
+            local children = f:GetChildren()
+            if #children > beforeCount then
+                for idx = #children, 1, -1 do
+                    if children[idx].Name == "PlasticBlock" then
+                        pB = children[idx]
+                        break
+                    end
+                end
+            end
+        until pB ~= nil or elapsed >= 3
+
+        if pB then
+            -- STEP 3: Scale
+            local t2 = ch:WaitForChild("ScalingTool")
+            h:EquipTool(t2)
+            task.wait(0.08)
+            t2:WaitForChild("RF"):InvokeServer(pB, Vector3.new(sX, sY, sZ), bCF)
+            task.wait(0.08)
+
+            -- STEP 4: Paint
+            if uC then
+                local t3 = ch:WaitForChild("PaintingTool")
+                h:EquipTool(t3)
+                task.wait(0.08)
+                t3:WaitForChild("RF"):InvokeServer({{{pB, cP.BackgroundColor3}}})
+                task.wait(0.08)
             end
         end
 
-        if pB and uC then
-            -- 3) Paint via BaBFT Hammer remote
-            --    Action "Paint", part, color
-            remote:FireServer("Paint", pB, col)
-            task.wait(0.08)
-        end
-
-        task.wait(0.05)
+        h:UnequipTools()
+        task.wait(0.08)
     end
 
     bD.Text = "BUILD SEAMLESS CIRCLE"
