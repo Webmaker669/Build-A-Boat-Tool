@@ -445,3 +445,162 @@ MainFrame:GetAttributeChangedSignal("SelectedPos"):Connect(updateRealtimeVisuali
 MainFrame:GetAttributeChangedSignal("ActiveColor"):Connect(updateRealtimeVisualizerRing)
 -- // END OF FILE //
 
+-- =============================================================================
+-- PART 5: RAYCAST TARGET LOCKS & SERVER PLACEMENT NETWORK PIPES
+-- =============================================================================
+local Players = game:GetService("Players")
+local LocalPlayer = Players.LocalPlayer
+local Mouse = LocalPlayer:GetMouse()
+local RunService = game:GetService("RunService")
+
+local uiData = _G.CircleBuilderUI_SharedData
+local colorData = _G.ActiveCircleBuilderColorData
+
+if not uiData or not uiData.verifyMaterialQuantity then 
+	error("Sequence Interrupted: Run Part 4 first.") 
+end
+
+local inputRadius = uiData.inputRadius
+local inputSteps = uiData.inputSteps
+local inputSizeY = uiData.inputSizeY
+local inputBlockType = uiData.inputBlockType
+local statusLabel = uiData.statusLabel
+local btnPreview = uiData.btnPreview
+local btnBuild = uiData.btnBuild
+local previewFolder = uiData.previewFolder
+local btnSelect = uiData.btnSelect
+local selectionBox = uiData.selectionBox
+local ColorPanel = uiData.ColorPanel
+local HelpPanel = uiData.HelpPanel
+
+local isSelecting = false
+local folder = workspace:WaitForChild("Blocks", 5):WaitForChild(LocalPlayer.Name, 5)
+
+-- Raycast Crosshair coordinate vector tracking routines
+btnSelect.MouseButton1Click:Connect(function()
+	if isSelecting then return end
+	isSelecting = true
+	statusLabel.Text, statusLabel.TextColor3, btnSelect.Text = "Hover over canvas plot area and select node...", Color3.fromRGB(240, 180, 20), "Awaiting Target Confirmation..."
+	
+	local renderConnection, clickConnection
+	renderConnection = RunService.RenderStepped:Connect(function()
+		local target = Mouse.Target
+		if target and target:IsA("BasePart") then
+			selectionBox.Adornee = target
+		else
+			selectionBox.Adornee = nil
+		end
+	end)
+	
+	clickConnection = Mouse.Button1Down:Connect(function()
+		local target = Mouse.Target
+		if target and target:IsA("BasePart") then
+			uiData.selectedCenterPos = target.Position
+			statusLabel.Text = "Anchor Node Position Synchronized: " .. target.Name
+			statusLabel.TextColor3 = Color3.fromRGB(80, 240, 80)
+			renderConnection:Disconnect()
+			clickConnection:Disconnect()
+			selectionBox.Adornee = nil
+			isSelecting = false
+			btnSelect.Text = "Select Center Target Block"
+			uiData.updateRealtimeVisualizerRing()
+		end
+	end)
+end)
+
+-- Construction deploy engine invocation routines
+btnBuild.MouseButton1Click:Connect(function()
+	local selectedCenterPos = uiData.selectedCenterPos
+	if isSelecting or not selectedCenterPos then return end
+	
+	local selectedBlockString = tostring(inputBlockType.Text)
+	local canBuild, currentInventoryCount = uiData.verifyMaterialQuantity()
+	
+	-- Verify user has blocks left inside Data folder before running building cycles
+	if not canBuild then
+		statusLabel.Text = "Build Failed: Out of " .. selectedBlockString .. "!"
+		statusLabel.TextColor3 = Color3.fromRGB(255, 80, 80)
+		return
+	end
+	
+	local radius = tonumber(inputRadius.Text) or 20
+	local steps = tonumber(inputSteps.Text) or 30
+	local sizeY = tonumber(inputSizeY.Text) or 2
+	
+	local circumference = 2 * math.pi * radius
+	local sizeZ = circumference / steps
+	local sizeX = (2 * radius * math.tan(math.pi / steps)) + 0.02
+	
+	local function findRemote(tName)
+		local tl = LocalPlayer.Backpack:FindFirstChild(tName) or (LocalPlayer.Character and LocalPlayer.Character:FindFirstChild(tName))
+		return tl and tl:FindFirstChild("RF")
+	end
+	
+	local bRF, sRF, pRF = findRemote("BuildingTool"), findRemote("ScalingTool"), findRemote("PaintingTool")
+	if not bRF or not sRF or not pRF then
+		statusLabel.Text, statusLabel.TextColor3 = "Hardware Fault: Missing active utilities!", Color3.fromRGB(255, 80, 80)
+		return
+	end
+	
+	btnPreview.Text, btnPreview.BackgroundColor3 = "Hologram Preview Configuration: Disabled", Color3.fromRGB(110, 110, 115)
+	previewFolder:ClearAllChildren()
+	ColorPanel.Visible = false
+	HelpPanel.Visible = false
+	
+	btnBuild.Text, btnBuild.Active = "Constructing Active Sector Matrix...", false
+	
+	local blockTrackValueInstance = uiData.dataFolder:FindFirstChild(selectedBlockString)
+	
+	for i = 1, steps do
+		-- Safety cutoff instantly pauses if block data inventory hits zero mid-air
+		if blockTrackValueInstance and blockTrackValueInstance.Value <= 0 then
+			statusLabel.Text = "Interrupted: Ran out of " .. selectedBlockString .. "!"
+			statusLabel.TextColor3 = Color3.fromRGB(255, 80, 80)
+			break
+		end
+
+		local angle = (i / steps) * math.pi * 2
+		local targetPlacementPos = Vector3.new(selectedCenterPos.X + math.cos(angle) * radius, selectedCenterPos.Y, selectedCenterPos.Z + math.sin(angle) * radius)
+		
+		local pCF, hCF = CFrame.lookAt(targetPlacementPos, selectedCenterPos), CFrame.new(targetPlacementPos) * CFrame.Angles(0, angle, 0)
+		local initialChildren = folder:GetChildren()
+		
+		-- PASSES USER'S EXACT LIVE INVENTORY COUNT DIRECTLY INTO THE REMOTE CALL NUMBER PARAMETER
+		bRF:InvokeServer(selectedBlockString, blockTrackValueInstance.Value, Instance.new("Part", nil), pCF, true, hCF, false)
+		
+		local dynamicBlockPath, retries = nil, 0
+		while not dynamicBlockPath and retries < 30 do
+			task.wait(0.01)
+			local currentChildren = folder:GetChildren()
+			if #currentChildren > #initialChildren then
+				dynamicBlockPath = currentChildren[#currentChildren]
+			end
+			retries = retries + 1
+		end
+		
+		if dynamicBlockPath then
+			local sVec = Vector3.new(sizeX, sizeY, sizeZ)
+			sRF:InvokeServer(dynamicBlockPath, sVec, pCF)
+			task.wait(0.01)
+			
+			local col = colorData.ColorObject
+			local args = {
+				{
+					{ dynamicBlockPath, col },
+					{ dynamicBlockPath, col },
+					{ dynamicBlockPath, col },
+					{ dynamicBlockPath, col }
+				}
+			}
+			pRF:InvokeServer(unpack(args))
+		end
+		task.wait(0.03)
+	end
+	
+	btnBuild.Text, btnBuild.Active = "Commence Circle Construction", true
+	if not string.find(statusLabel.Text, "Interrupted") then
+		statusLabel.Text, statusLabel.TextColor3 = "Matrix Sequence Completed!", Color3.fromRGB(80, 240, 80)
+	end
+end)
+
+-- // END OF FILE: Part_5_Engine.lua //
