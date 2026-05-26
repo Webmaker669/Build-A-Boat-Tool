@@ -1,21 +1,38 @@
 local P, cCF, mP = game:GetService("Players").LocalPlayer, nil, game:GetService("Players").LocalPlayer:GetMouse()
 local sG = Instance.new("ScreenGui", P:WaitForChild("PlayerGui")) sG.Name = "StudioUI" sG.ResetOnSpawn = false
-local m = Instance.new("Frame", sG) m.Size, m.Position = UDim2.new(0,340,0,440), UDim2.new(0.05,0,0.2,0)
+local m = Instance.new("Frame", sG) m.Size, m.Position = UDim2.new(0,340,0,460), UDim2.new(0.05,0,0.2,0)
 m.BackgroundColor3, m.Active, m.Draggable, m.BorderSizePixel = Color3.fromRGB(30,30,35), true, true, 0
-Instance.new("UICorner", m).CornerRadius = UDim.new(0,8)
+Instance.new("UICorner", m).CornerRadius = UDim.new(0,10)
 
-local t = Instance.new("TextLabel", m) t.Size, t.Text = UDim2.new(1,-40,0,35), " Seamless Circle Studio"
-t.TextColor3, t.TextSize, t.Font, t.TextXAlignment = Color3.new(1,1,1), 15, 4, 0 t.BackgroundTransparency = 1
+-- Header/Title Layout Banner 
+local hb = Instance.new("Frame", m) hb.Size, hb.Position = UDim2.new(1,0,0,38), UDim2.new(0,0,0,0)
+hb.BackgroundColor3, hb.BorderSizePixel = Color3.fromRGB(24,24,28), 0 Instance.new("UICorner", hb).CornerRadius = UDim.new(0,10)
+local t = Instance.new("TextLabel", hb) t.Size, t.Text = UDim2.new(1,-40,1,0), "  Seamless Circle Studio"
+t.TextColor3, t.TextSize, t.Font, t.TextXAlignment = Color3.fromRGB(240,240,245), 14, 4, 0 t.BackgroundTransparency = 1
 
-local cP = Instance.new("Frame", m) cP.Size, cP.Position = UDim2.new(0,40,0,40), UDim2.new(0,280,0,45)
-cP.BackgroundColor3, cP.BorderSizePixel = Color3.new(1,1,1), 0 Instance.new("UICorner", cP).CornerRadius = UDim.new(0,6)
+-- Minimize Button Layout Component
+local minBtn = Instance.new("TextButton", hb) minBtn.Size, minBtn.Position = UDim2.new(0,26,0,26), UDim2.new(1,-32,0,6)
+minBtn.BackgroundColor3, minBtn.Text, minBtn.TextColor3, minBtn.Font, minBtn.TextSize = Color3.fromRGB(42,42,48), "-", Color3.new(1,1,1), 4, 18
+minBtn.BorderSizePixel = 0 Instance.new("UICorner", minBtn).CornerRadius = UDim.new(0,6)
 
--- Grid-Based Roblox Palette Layout Implementation
-local pF = Instance.new("Frame", m) pF.Size, pF.Position = UDim2.new(0,250,0,40), UDim2.new(0,20,0,45)
+local isMinimized, originalSize = false, m.Size
+minBtn.MouseButton1Click:Connect(function()
+    isMinimized = not isMinimized
+    if isMinimized then
+        m:TweenSize(UDim2.new(0, 340, 0, 38), "Out", "Quad", 0.2, true) minBtn.Text = "+"
+    else
+        m:TweenSize(originalSize, "Out", "Quad", 0.2, true) minBtn.Text = "-"
+    end
+end)
+
+local cP = Instance.new("Frame", m) cP.Size, cP.Position = UDim2.new(0,42,0,42), UDim2.new(0,278,0,52)
+cP.BackgroundColor3, cP.BorderSizePixel = Color3.new(1,1,1), 0 Instance.new("UICorner", cP).CornerRadius = UDim.new(0,8)
+
+-- Grid-Based Color Palette Setup
+local pF = Instance.new("Frame", m) pF.Size, pF.Position = UDim2.new(0,250,0,42), UDim2.new(0,20,0,52)
 pF.BackgroundTransparency = 1 local uG = Instance.new("UIGridLayout", pF)
-uG.CellSize, uG.CellPadding = UDim2.new(0,22,0,18), UDim2.new(0,2,0,2)
+uG.CellSize, uG.CellPadding = UDim2.new(0,23,0,20), UDim2.new(0,2,0,2)
 
--- The Classic Roblox Part Color Swatches array
 local robloxColors = {
     Color3.fromRGB(255,0,0), Color3.fromRGB(0,255,0), Color3.fromRGB(0,0,255), Color3.fromRGB(255,255,0),
     Color3.fromRGB(255,0,255), Color3.fromRGB(0,255,255), Color3.fromRGB(255,255,255), Color3.fromRGB(163,162,165),
@@ -25,29 +42,30 @@ local robloxColors = {
 }
 
 local function cI(n, p, x, y, r)
-    local l = Instance.new("TextLabel", m) l.Size, l.Position = UDim2.new(0,65,0,22), UDim2.new(0,x,0,y)
-    l.Text, l.TextColor3, l.TextSize, l.Font, l.TextXAlignment = n, Color3.fromRGB(180,180,180), 13, 3, 0 l.BackgroundTransparency = 1
-    local b = Instance.new("TextBox", m) b.Size, b.Position = UDim2.new(0,80,0,22), UDim2.new(0,x+65,0,y)
-    b.BackgroundColor3 = r and Color3.fromRGB(38,38,40) or Color3.fromRGB(45,45,50)
-    b.TextColor3 = r and Color3.fromRGB(130,130,130) or Color3.new(1,1,1) b.BorderSizePixel = 0
+    local l = Instance.new("TextLabel", m) l.Size, l.Position = UDim2.new(0,65,0,24), UDim2.new(0,x,0,y)
+    l.Text, l.TextColor3, l.TextSize, l.Font, l.TextXAlignment = n, Color3.fromRGB(180,180,185), 13, 3, 0 l.BackgroundTransparency = 1
+    local b = Instance.new("TextBox", m) b.Size, b.Position = UDim2.new(0,80,0,24), UDim2.new(0,x+65,0,y)
+    b.BackgroundColor3 = r and Color3.fromRGB(36,36,40) or Color3.fromRGB(44,44,50)
+    b.TextColor3 = r and Color3.fromRGB(140,140,145) or Color3.new(1,1,1) b.BorderSizePixel = 0
     b.Text, b.ClearTextOnFocus, b.Font, b.TextSize, b.TextEditable = p, false, 3, 13, not r
-    Instance.new("UICorner", b).CornerRadius = UDim.new(0,4) return b
+    Instance.new("UICorner", b).CornerRadius = UDim.new(0,5) return b
 end
 
-local iR = cI("Radius:", "30", 20, 105) local iB = cI("Blocks:", "120", 170, 105)
-local aX = cI("Thick (X):", "0.05", 20, 135, true) local iY = cI("Height (Y):", "2.0", 170, 135)
-local aZ = cI("Length (Z):", "Calculated", 20, 165, true) local iC = cI("RGB Val:", "1,1,1", 170, 165)
+local iR = cI("Radius:", "30", 20, 115) local iB = cI("Blocks:", "120", 170, 115)
+local aX = cI("Thick (X):", "0.05", 20, 148, true) local iY = cI("Height (Y):", "2.0", 170, 148)
+local aZ = cI("Length (Z):", "Calculated", 20, 181, true) local iC = cI("RGB Val:", "1,1,1", 170, 181)
 
 local function cB(n, x, y, w, h, c)
     local btn = Instance.new("TextButton", m) btn.Size, btn.Position = UDim2.new(0,w,0,h), UDim2.new(0,x,0,y)
     btn.BackgroundColor3, btn.Text, btn.TextColor3, btn.Font, btn.TextSize, btn.BorderSizePixel = c, n, Color3.new(1,1,1), 4, 13, 0
-    Instance.new("UICorner", btn).CornerRadius = UDim.new(0,5) return btn
+    Instance.new("UICorner", btn).CornerRadius = UDim.new(0,6) return btn
 end
 
-local sC = cB("SELECT CENTER", 20, 200, 300, 30, Color3.fromRGB(140,90,190))
-local pV = cB("PREVIEW: OFF", 20, 240, 300, 30, Color3.fromRGB(60,65,70))
-local tB = cB("PAINTING: ON", 20, 280, 300, 30, Color3.fromRGB(0,115,190))
-local bD = cB("BUILD SEAMLESS CIRCLE", 20, 325, 300, 38, Color3.fromRGB(0,140,90))
+-- Beautiful Grid-Aligned Compact Action Controls
+local sC = cB("SELECT CENTER", 20, 220, 145, 32, Color3.fromRGB(130,85,180))
+local pV = cB("PREVIEW: OFF", 175, 220, 145, 32, Color3.fromRGB(58,62,68))
+local tB = cB("PAINTING: ON", 20, 260, 300, 32, Color3.fromRGB(0,110,185))
+local bD = cB("BUILD SEAMLESS CIRCLE", 20, 305, 300, 40, Color3.fromRGB(0,135,85))
 
 local uC, showPrev = true, false
 local previewFolder = Instance.new("Folder", workspace) previewFolder.Name = "CircleHologram"
@@ -66,14 +84,11 @@ local function uP()
     else clearHologram() end
 end
 
--- Generate Palette Selection Swatch Buttons
 for _, color in ipairs(robloxColors) do
     local sw = Instance.new("TextButton", pF) sw.BackgroundColor3, sw.Text, sw.BorderSizePixel = color, "", 0
-    Instance.new("UICorner", sw).CornerRadius = UDim.new(0,3)
+    Instance.new("UICorner", sw).CornerRadius = UDim.new(0,4)
     sw.MouseButton1Click:Connect(function()
-        cP.BackgroundColor3 = color
-        iC.Text = string.format("%.2f, %.2f, %.2f", color.R, color.G, color.B)
-        uP()
+        cP.BackgroundColor3 = color iC.Text = string.format("%.2f, %.2f, %.2f", color.R, color.G, color.B) uP()
     end)
 end
 
@@ -87,27 +102,23 @@ iR:GetPropertyChangedSignal("Text"):Connect(uP) iB:GetPropertyChangedSignal("Tex
 sC.MouseButton1Click:Connect(function()
     sC.Text, sC.BackgroundColor3 = "CLICK PLOT PART...", Color3.fromRGB(180,50,50)
     local conn; conn = mP.Button1Down:Connect(function()
-        if mP.Target then cCF = mP.Target.CFrame sC.Text, sC.BackgroundColor3 = "CENTER SET", Color3.fromRGB(0,140,90) conn:Disconnect() uP() end
+        if mP.Target then cCF = mP.Target.CFrame sC.Text, sC.BackgroundColor3 = "CENTER SET", Color3.fromRGB(0,135,85) conn:Disconnect() uP() end
     end)
 end)
 
 pV.MouseButton1Click:Connect(function()
     if not cCF then
-        pV.Text = "Select A Center Before Previewing"
-        pV.BackgroundColor3 = Color3.fromRGB(180, 50, 50)
-        task.delay(2, function()
-            if not showPrev then pV.Text = "PREVIEW: OFF" pV.BackgroundColor3 = Color3.fromRGB(60,65,70) end
-        end)
-        return
+        pV.Text = "Select A Center Before Previewing" pV.BackgroundColor3 = Color3.fromRGB(180, 50, 50)
+        task.delay(2, function() if not showPrev then pV.Text = "PREVIEW: OFF" pV.BackgroundColor3 = Color3.fromRGB(58,62,68) end end) return
     end
     showPrev = not showPrev pV.Text = showPrev and "PREVIEW: ON" or "PREVIEW: OFF"
-    pV.BackgroundColor3 = showPrev and Color3.fromRGB(0,140,90) or Color3.fromRGB(60,65,70) uP()
+    pV.BackgroundColor3 = showPrev and Color3.fromRGB(0,135,85) or Color3.fromRGB(58,62,68) uP()
 end)
 
 tB.MouseButton1Click:Connect(function()
     uC = not uC tB.Text = uC and "PAINTING: ON" or "PAINTING: OFF"
-    tB.BackgroundColor3 = uC and Color3.fromRGB(0,115,190) or Color3.fromRGB(90,95,100)
-    iC.TextEditable = uC iC.BackgroundColor3 = uC and Color3.fromRGB(45,45,50) or Color3.fromRGB(38,38,40)
+    tB.BackgroundColor3 = uC and Color3.fromRGB(0,110,185) or Color3.fromRGB(85,88,94)
+    iC.TextEditable = uC iC.BackgroundColor3 = uC and Color3.fromRGB(44,44,50) or Color3.fromRGB(36,36,40)
     if not uC then cP.BackgroundColor3 = Color3.fromRGB(163,162,165) end uP()
 end)
 
