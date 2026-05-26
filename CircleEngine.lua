@@ -18,10 +18,13 @@ local blocksFolder = workspace:WaitForChild("Blocks"):WaitForChild(player.Name)
 local perfectZWidth = (2 * math.pi * radius) / numberOfBlocks
 local targetSize = Vector3.new(sizeX, sizeY, perfectZWidth + 0.02) 
 
-print("Executing logic with humanized tool-switch delay profiles...")
+print("Executing logic with safe human-emulated delay windows...")
 
--- Listener setup to track exactly when parts land in your folder
+-- Caching variables for our tracking system
 local newlySpawnedBlock = nil
+local uniqueBatchID = "ProcessedBlock_" .. tostring(os.time())
+
+-- Active event listener that catches the EXACT block that falls into your folder
 local connection = blocksFolder.ChildAdded:Connect(function(child)
     if child:IsA("Part") and child.Name == "PlasticBlock" then
         newlySpawnedBlock = child
@@ -34,6 +37,7 @@ for i = 1, numberOfBlocks do
     local offsetZ = math.sin(angle) * radius
     local blockPosition = centerCFrame * CFrame.new(offsetX, 0, offsetZ) * CFrame.Angles(0, -angle, 0)
     
+    -- Clear tracking variable for the new loop iteration
     newlySpawnedBlock = nil
     
     -- ============================================================================
@@ -42,7 +46,7 @@ for i = 1, numberOfBlocks do
     local buildingTool = backpack:FindFirstChild("BuildingTool") or character:FindFirstChild("BuildingTool")
     if buildingTool then
         humanoid:EquipTool(buildingTool)
-        task.wait(0.06) -- Delay: Let game register you are holding the building tool
+        task.wait(0.15) -- Safe delay: Let the tool completely initialize on the server
         
         local buildArgs = {
             "PlasticBlock",
@@ -56,11 +60,11 @@ for i = 1, numberOfBlocks do
         buildingTool:WaitForChild("RF"):InvokeServer(unpack(buildArgs))
     end
     
-    -- Wait until the block physically exists in the workspace folder
+    -- HARD PAUSE FOR SERVER REPLICATION: Wait up to 1 full second for the block to exist
     local startTime = os.clock()
-    repeat 
-        task.wait() 
-    until newlySpawnedBlock or (os.clock() - startTime > 0.4)
+    while not newlySpawnedBlock and (os.clock() - startTime < 1.0) do
+        task.wait()
+    end
     
     -- ============================================================================
     -- STEP 2: EQUIP SCALING TOOL AND RESIZE
@@ -71,9 +75,11 @@ for i = 1, numberOfBlocks do
         
         if scalingTool then
             humanoid:EquipTool(scalingTool)
-            task.wait(0.06) -- Delay: Let game register you switched to the scaling tool
+            task.wait(0.15) -- Safe delay: Give server time to switch tools
             
-            targetBlock.Name = "ProcessedBlock"
+            -- Rename it to a unique ID so subsequent loop iterations never touch it again
+            targetBlock.Name = uniqueBatchID
+            
             local scaleArgs = {
                 targetBlock,
                 targetSize,
@@ -82,7 +88,7 @@ for i = 1, numberOfBlocks do
             scalingTool:WaitForChild("RF"):InvokeServer(unpack(scaleArgs))
         end
         
-        task.wait(0.04) -- Short rest buffer before painting
+        task.wait(0.1) -- Settle delay before painting
         
         -- ============================================================================
         -- STEP 3: EQUIP PAINTING TOOL AND COLOR
@@ -91,7 +97,7 @@ for i = 1, numberOfBlocks do
             local paintingTool = backpack:FindFirstChild("PaintingTool") or character:FindFirstChild("PaintingTool")
             if paintingTool then
                 humanoid:EquipTool(paintingTool)
-                task.wait(0.06) -- Delay: Let game register you switched to the painting tool
+                task.wait(0.15) -- Safe delay: Give server time to switch tools
                 
                 local paintArgs = {
                     {
@@ -104,19 +110,21 @@ for i = 1, numberOfBlocks do
                 paintingTool:WaitForChild("RF"):InvokeServer(unpack(paintArgs))
             end
         end
+    else
+        warn("Block placement skipped on loop number: " .. i .. " due to replication lag.")
     end
     
-    -- Unequip tools and clear hands before starting the next block segment
+    -- Cleanly drop tools and clear character hands before beginning next segment
     humanoid:UnequipTools()
-    task.wait(0.05) -- Clean rest delay between separate block steps
+    task.wait(0.15) -- Global cooldown delay to prevent anticheat detection flagging
 end
 
--- Cleanup routine
+-- Cleanup routine: Disconnect listener and revert temporary IDs back to standard names
 connection:Disconnect()
 for _, block in ipairs(blocksFolder:GetChildren()) do
-    if block.Name == "ProcessedBlock" then
+    if block.Name == uniqueBatchID then
         block.Name = "PlasticBlock"
     end
 end
 
-print("Circle complete with zero skipped blocks!")
+print("Circle complete with zero tool tracking lockups!")
