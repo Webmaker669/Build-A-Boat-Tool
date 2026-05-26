@@ -10,7 +10,6 @@ t.TextColor3, t.TextSize, t.Font, t.TextXAlignment = Color3.new(1,1,1), 15, 4, 0
 local cP = Instance.new("Frame", m) cP.Size, cP.Position = UDim2.new(0,40,0,40), UDim2.new(0,270,0,85)
 cP.BackgroundColor3, cP.BorderSizePixel = Color3.new(1,1,1), 0 Instance.new("UICorner", cP).CornerRadius = UDim.new(0,6)
 
--- Color Wheel Canvas Implementation
 local cW = Instance.new("ImageLabel", m) cW.Size, cW.Position = UDim2.new(0,230,0,40), UDim2.new(0,20,0,45)
 cW.Image, cW.BorderSizePixel = "rbxassetid://132107452654392", 0 Instance.new("UICorner", cW).CornerRadius = UDim.new(0,6)
 
@@ -63,7 +62,6 @@ end
 
 iR:GetPropertyChangedSignal("Text"):Connect(uP) iB:GetPropertyChangedSignal("Text"):Connect(uP) iY:GetPropertyChangedSignal("Text"):Connect(uP) iC:GetPropertyChangedSignal("Text"):Connect(parseColor)
 
--- Color Spectrum Mouse Sampling Math
 local sampling = false
 local function sampleColor()
     local absPos, absSize = cW.AbsolutePosition, cW.AbsoluteSize
@@ -106,16 +104,27 @@ bD.MouseButton1Click:Connect(function()
     for i = 1, nB do
         local a = (i / nB) * (2 * math.pi)
         local bP = cCF * CFrame.new(math.cos(a)*r, 0, math.sin(a)*r) * CFrame.Angles(0, -a, 0)
+        
+        -- 1. Build
         local t1 = P.Backpack:FindFirstChild("BuildingTool") or ch:FindFirstChild("BuildingTool")
         if t1 then h:EquipTool(t1) t1:WaitForChild("RF"):InvokeServer("PlasticBlock", 8001, workspace:WaitForChild("WhiteZone"), CFrame.new(-10, 6.1, -20) * CFrame.Angles(0,-a,0), true, bP, false) end
-        task.wait(0.01)
+        
+        -- Increased delay to give the server breathing room and avoid HTTP 429
+        task.wait(0.04)
+        
+        -- 2. Scale
         local pB = f:FindFirstChild("PlasticBlock") local t2 = P.Backpack:FindFirstChild("ScalingTool") or ch:FindFirstChild("ScalingTool")
         if pB and t2 then h:EquipTool(t2) pB.Name = gID t2:WaitForChild("RF"):InvokeServer(pB, Vector3.new(sX, sY, sZ), bP) end
-        task.wait(0.01)
+        
+        task.wait(0.04)
+        
+        -- 3. Paint
         if uC then local t3 = P.Backpack:FindFirstChild("PaintingTool") or ch:FindFirstChild("PaintingTool")
             if pB and t3 then h:EquipTool(t3) t3:WaitForChild("RF"):InvokeServer({{{pB, cP.BackgroundColor3}}}) end
+            task.wait(0.04)
         end
-        h:UnequipTools() task.wait(0.01)
+        
+        h:UnequipTools()
     end
     for _, b in ipairs(f:GetChildren()) do if b.Name == gID then b.Name = "PlasticBlock" end end
 end)
