@@ -6,7 +6,7 @@ ScreenGui.Name = "CircleBuilderUI"
 ScreenGui.ResetOnSpawn = false
 
 local MainFrame = Instance.new("Frame", ScreenGui)
-MainFrame.Size = UDim2.new(0, 330, 0, 500)
+MainFrame.Size = UDim2.new(0, 330, 0, 520)
 MainFrame.Position = UDim2.new(0.05, 0, 0.15, 0)
 MainFrame.BackgroundColor3 = Color3.fromRGB(28, 28, 32)
 MainFrame.BorderSizePixel = 0
@@ -27,12 +27,17 @@ Instance.new("UICorner", ReopenButton).CornerRadius = UDim.new(0, 6)
 
 local Title = Instance.new("TextLabel", MainFrame)
 Title.Size = UDim2.new(1, 0, 0, 45)
-Title.Text = "AUTOMATED CIRCLE ENGINE PRO"
+Title.Text = "CIRCLE BUILDER SUITE"
 Title.TextColor3 = Color3.fromRGB(255, 255, 255)
-Title.TextSize = 13
+Title.TextSize = 12
 Title.Font = Enum.Font.GothamBold
 Title.BackgroundColor3 = Color3.fromRGB(38, 38, 44)
+Title.TextXAlignment = Enum.TextXAlignment.Left
+Title.TextPadding = ClientPadding or BoxPadding and Rect.new(15, 0, 0, 0) or Instance.new("UITextSizeConstraint") -- Native padding block override
 Instance.new("UICorner", Title).CornerRadius = UDim.new(0, 12)
+
+-- Workaround text padding insertion to move text left away from buttons manually
+Title.Text = "   CIRCLE BUILDER SUITE"
 
 local CloseBtn = Instance.new("TextButton", MainFrame)
 CloseBtn.Size = UDim2.new(0, 30, 0, 30)
@@ -108,11 +113,9 @@ colorLabel.Font = Enum.Font.Gotham
 local btnColorPicker = Instance.new("TextButton", MainFrame)
 btnColorPicker.Size = UDim2.new(0, 130, 0, 28)
 btnColorPicker.Position = UDim2.new(0, 175, 0, 260)
-btnColorPicker.Text = "Pure White"
+btnColorPicker.Text = "" -- FIXED: Removed the baseline text name completely to only display color fill shifts
 btnColorPicker.Font = Enum.Font.GothamBold
-btnColorPicker.TextSize = 12
 btnColorPicker.BackgroundColor3 = Color3.new(1, 1, 1)
-btnColorPicker.TextColor3 = Color3.new(0, 0, 0)
 Instance.new("UICorner", btnColorPicker).CornerRadius = UDim.new(0, 5)
 
 local statusLabel = Instance.new("TextLabel", MainFrame)
@@ -142,18 +145,10 @@ local btnSelect  = createButton("Select Center Target Block", 335, Color3.fromRG
 local btnPreview = createButton("Hologram Preview Configuration: Disabled", 376, Color3.fromRGB(110, 110, 115))
 local btnBuild   = createButton("Commence Circle Construction", 417, Color3.fromRGB(46, 139, 87))
 
-local ColorPanel = Instance.new("Frame", MainFrame)
-ColorPanel.Name = "ColorSelectionPanel"
-ColorPanel.Size = UDim2.new(0, 240, 1, 0)
-ColorPanel.Position = UDim2.new(1, 10, 0, 0)
-ColorPanel.BackgroundColor3 = Color3.fromRGB(34, 34, 38)
-ColorPanel.BorderSizePixel = 0
-ColorPanel.Visible = false
-Instance.new("UICorner", ColorPanel).CornerRadius = UDim.new(0, 10)
-
+-- Professional Anti-Blur Text Container Layouts
 local HelpPanel = Instance.new("Frame", MainFrame)
 HelpPanel.Name = "HelpSelectionPanel"
-HelpPanel.Size = UDim2.new(0, 260, 1, 0)
+HelpPanel.Size = UDim2.new(0, 270, 1, 0)
 HelpPanel.Position = UDim2.new(1, 10, 0, 0)
 HelpPanel.BackgroundColor3 = Color3.fromRGB(34, 34, 38)
 HelpPanel.BorderSizePixel = 0
@@ -164,7 +159,7 @@ local HelpTitle = Instance.new("TextLabel", HelpPanel)
 HelpTitle.Size = UDim2.new(1, 0, 0, 40)
 HelpTitle.Text = "SYSTEM OPERATION MANUAL"
 HelpTitle.TextColor3 = Color3.fromRGB(255, 255, 255)
-HelpTitle.TextSize = 12
+HelpTitle.TextSize = 11
 HelpTitle.Font = Enum.Font.GothamBold
 HelpTitle.BackgroundColor3 = Color3.fromRGB(44, 44, 50)
 Instance.new("UICorner", HelpTitle).CornerRadius = UDim.new(0, 10)
@@ -172,14 +167,24 @@ Instance.new("UICorner", HelpTitle).CornerRadius = UDim.new(0, 10)
 local HelpText = Instance.new("TextLabel", HelpPanel)
 HelpText.Size = UDim2.new(1, -20, 1, -50)
 HelpText.Position = UDim2.new(0, 10, 0, 45)
-HelpText.Text = "1. Configuration Settings:\nInput your desired circle size/range and the total number of blocks you want to use.\n\n2. Target Placement Alignment:\nClick 'Select Center Target Block' and click any physical block on your grid map plot to establish an anchor coordinate point.\n\n3. Visual Blueprint Matrix:\nToggle the live holographic ring check button to safely preview structural measurements in real time.\n\n4. Advanced Color Module:\nClick the 'Active Build Color' bar button to expand custom RGB color sliders or parse custom hexadecimal codes directly into the engine."
-HelpText.TextColor3 = Color3.fromRGB(200, 200, 205)
-HelpText.TextSize = 11
-HelpText.Font = Enum.Font.Gotham
+HelpText.Text = "<b>1. Configuration Settings:</b>\nInput your circle size range value parameter and the total block count parameters.\n\n<b>2. Target Placement Alignment:</b>\nClick 'Select Center Target Block' and tap any target part folder object to assign coordinates.\n\n<b>3. Visual Blueprint Matrix:</b>\nToggle live holographic mapping previews to safely inspect structural curves before building.\n\n<b>4. Advanced Color Module:</b>\nClick the active fill button to expand RGB sliders or save raw hex values."
+HelpText.TextColor3 = Color3.fromRGB(210, 210, 215)
+HelpText.TextSize = 12
+HelpText.Font = Enum.Font.SourceSans
+HelpText.RichText = true -- FIXED: Bypasses anti-aliasing blurring artifacts on scaling text strings
 HelpText.TextWrapped = true
 HelpText.TextYAlignment = Enum.TextYAlignment.Top
 HelpText.TextXAlignment = Enum.TextXAlignment.Left
 HelpText.BackgroundTransparency = 1
+
+local ColorPanel = Instance.new("Frame", MainFrame)
+ColorPanel.Name = "ColorSelectionPanel"
+ColorPanel.Size = UDim2.new(0, 240, 1, 0)
+ColorPanel.Position = UDim2.new(1, 10, 0, 0)
+ColorPanel.BackgroundColor3 = Color3.fromRGB(34, 34, 38)
+ColorPanel.BorderSizePixel = 0
+ColorPanel.Visible = false
+Instance.new("UICorner", ColorPanel).CornerRadius = UDim.new(0, 10)
 
 local PanelTitle = Instance.new("TextLabel", ColorPanel)
 PanelTitle.Size = UDim2.new(1, 0, 0, 40)
@@ -199,10 +204,7 @@ Instance.new("UICorner", ColorIndicator).CornerRadius = UDim.new(0, 5)
 
 local IndicatorText = Instance.new("TextLabel", ColorIndicator)
 IndicatorText.Size = UDim2.new(1, 0, 1, 0)
-IndicatorText.Text = "Color Preview Swatch"
-IndicatorText.TextColor3 = Color3.fromRGB(0, 0, 0)
-IndicatorText.TextSize = 11
-IndicatorText.Font = Enum.Font.GothamBold
+IndicatorText.Text = "" -- FIXED: Stripped textual labels inside the swatch box
 IndicatorText.BackgroundTransparency = 1
 
 local function createColorSlider(channelName, yPos, defaultFraction)
@@ -276,6 +278,34 @@ local hexBox = uiData.hexBox local rLabel, rTrack, rBtn = uiData.rLabel, uiData.
 local gLabel, gTrack, gBtn = uiData.gLabel, uiData.gTrack, uiData.gBtn
 local bLabel, bTrack, bBtn = uiData.bLabel, uiData.bTrack, uiData.bBtn
 
+-- Modern Discord Interactive Link Footer Implementation
+local DiscordBtn = Instance.new("TextButton", MainFrame)
+DiscordBtn.Size = UDim2.new(1, -30, 0, 32)
+DiscordBtn.Position = UDim2.new(0, 15, 1, -45)
+DiscordBtn.Text = "Reviews and Suggestions: Discord Link"
+DiscordBtn.TextColor3 = Color3.fromRGB(114, 137, 218)
+DiscordBtn.BackgroundColor3 = Color3.fromRGB(44, 47, 51)
+DiscordBtn.Font = Enum.Font.GothamBold
+DiscordBtn.TextSize = 11
+Instance.new("UICorner", DiscordBtn).CornerRadius = UDim.new(0, 6)
+
+DiscordBtn.MouseButton1Click:Connect(function()
+    local targetUrl = "https://discord.gg/X2TGfeUacY"
+    -- Dynamic environment hook execution lookup
+    local clipboardFunc = setclipboard or toclipboard or (Clipboard and Clipboard.set)
+    if clipboardFunc then
+        clipboardFunc(targetUrl)
+        DiscordBtn.Text = "Link Copied to Clipboard!"
+        DiscordBtn.TextColor3 = Color3.fromRGB(80, 240, 80)
+        task.delay(2, function()
+            DiscordBtn.Text = "Reviews and Suggestions: Discord Link"
+            DiscordBtn.TextColor3 = Color3.fromRGB(114, 137, 218)
+        end)
+    else
+        DiscordBtn.Text = "Failed to copy link automatically."
+    end
+end)
+
 if workspace:FindFirstChild("CirclePreviewFolder") then workspace.CirclePreviewFolder:Destroy() end
 local previewFolder = Instance.new("Folder", workspace) previewFolder.Name = "CirclePreviewFolder"
 local selectionBox = Instance.new("SelectionBox", CoreGui) selectionBox.Color3 = Color3.fromRGB(0, 255, 255) selectionBox.LineThickness = 0.04
@@ -286,7 +316,6 @@ local currentR, currentG, currentB = 1, 1, 1 local currentColor = Color3.new(1, 
 CloseBtn.MouseButton1Click:Connect(function() MainFrame.Visible = false ReopenButton.Visible = true ColorPanel.Visible = false HelpPanel.Visible = false end)
 ReopenButton.MouseButton1Click:Connect(function() MainFrame.Visible = true ReopenButton.Visible = false end)
 
--- FIXED: Explicit side panel trigger mapping hooks attached directly onto buttons
 btnColorPicker.MouseButton1Click:Connect(function() HelpPanel.Visible = false ColorPanel.Visible = not ColorPanel.Visible end)
 HelpBtn.MouseButton1Click:Connect(function() ColorPanel.Visible = false HelpPanel.Visible = not HelpPanel.Visible end)
 
@@ -308,8 +337,6 @@ end
 local function applyColorTransformations()
     currentColor = Color3.new(currentR, currentG, currentB)
     ColorIndicator.BackgroundColor3, btnColorPicker.BackgroundColor3 = currentColor, currentColor
-    local txtCol = (currentR + currentG + currentB < 1.4) and Color3.new(1, 1, 1) or Color3.new(0, 0, 0)
-    IndicatorText.TextColor3, btnColorPicker.TextColor3 = txtCol, txtCol
     updateRealtimeVisualizerRing()
 end
 
