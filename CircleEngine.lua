@@ -27,24 +27,35 @@ for i = 1, numberOfBlocks do
     local a = (i / numberOfBlocks) * (2 * math.pi)
     local cosA = math.cos(a) * radius
     local sinA = math.sin(a) * radius
+    
+    -- Precise server-sided placement CFrame alignment calculation
     local bP = cCF * CFrame.new(cosA, 0, sinA) * CFrame.Angles(0, -a, 0)
     
     newlySpawnedBlock = nil
     
-    -- 1. Deploy Block
+    -- 1. Deploy Block (Using your exact localized plot argument footprint)
     local t1 = P.Backpack:FindFirstChild("BuildingTool") or ch:FindFirstChild("BuildingTool")
     if t1 then
         h:EquipTool(t1)
-        task.wait(0.04) -- CRITICAL FIX: Gives the server time to register the tool is active
+        task.wait(0.04) -- Activation frame buffer window
         
         local wZ = workspace:WaitForChild("WhiteZone")
-        local rot = CFrame.new(-10, 6.1, -20) * CFrame.Angles(0, -a, 0)
-        t1:WaitForChild("RF"):InvokeServer("PlasticBlock", 8001, wZ, rot, true, bP, false)
+        local localCFrame = CFrame.new(-15, 6.1, -93) * CFrame.Angles(0, -a, 0)
+        
+        t1:WaitForChild("RF"):InvokeServer(
+            "PlasticBlock",
+            8001,
+            wZ,
+            localCFrame,
+            true,
+            bP,
+            false
+        )
         requestsSent = requestsSent + 1
     end
     task.wait(0.05)
     
-    -- Frame-catch validator
+    -- Frame-catch loop validator
     local scanTime = os.clock()
     repeat task.wait() until newlySpawnedBlock or (os.clock() - scanTime > 0.5)
     
@@ -56,7 +67,7 @@ for i = 1, numberOfBlocks do
         local t2 = P.Backpack:FindFirstChild("ScalingTool") or ch:FindFirstChild("ScalingTool")
         if t2 then
             h:EquipTool(t2)
-            task.wait(0.04) -- CRITICAL FIX: Tool activation safety window
+            task.wait(0.04)
             
             t2:WaitForChild("RF"):InvokeServer(targetBlock, Vector3.new(sizeX, sizeY, sizeZ), bP)
             requestsSent = requestsSent + 1
@@ -68,7 +79,7 @@ for i = 1, numberOfBlocks do
             local t3 = P.Backpack:FindFirstChild("PaintingTool") or ch:FindFirstChild("PaintingTool")
             if t3 then
                 h:EquipTool(t3)
-                task.wait(0.04) -- CRITICAL FIX: Tool activation safety window
+                task.wait(0.04)
                 
                 t3:WaitForChild("RF"):InvokeServer({{{targetBlock, finalColor}}})
                 requestsSent = requestsSent + 1
@@ -79,57 +90,7 @@ for i = 1, numberOfBlocks do
     
     h:UnequipTools()
     
-    -- Network throttling clear buffer
-    if requestsSent >= 15 then
-        task.wait(0.5)
-        requestsSent = 0
-    end
-end
-
-listener:Disconnect()
-for _, b in ipairs(f:GetChildren()) do
-    if b.Name == gID then
-        b.Name = "PlasticBlock"
-    end
-end
-        h:EquipTool(t1)
-        local wZ = workspace:WaitForChild("WhiteZone")
-        local rot = CFrame.new(-10, 6.1, -20) * CFrame.Angles(0, -a, 0)
-        t1:WaitForChild("RF"):InvokeServer("PlasticBlock", 8001, wZ, rot, true, bP, false)
-        requestsSent = requestsSent + 1
-    end
-    task.wait(0.05)
-    
-    -- Frame-catch validator
-    local scanTime = os.clock()
-    repeat task.wait() until newlySpawnedBlock or (os.clock() - scanTime > 0.5)
-    
-    if newlySpawnedBlock then
-        local targetBlock = newlySpawnedBlock
-        targetBlock.Name = gID
-        
-        -- 2. Scale
-        local t2 = P.Backpack:FindFirstChild("ScalingTool") or ch:FindFirstChild("ScalingTool")
-        if t2 then
-            h:EquipTool(t2)
-            t2:WaitForChild("RF"):InvokeServer(targetBlock, Vector3.new(sizeX, sizeY, sizeZ), bP)
-            requestsSent = requestsSent + 1
-        end
-        task.wait(0.04)
-        
-        -- 3. Paint
-        if useColor then
-            local t3 = P.Backpack:FindFirstChild("PaintingTool") or ch:FindFirstChild("PaintingTool")
-            if t3 then
-                h:EquipTool(t3)
-                t3:WaitForChild("RF"):InvokeServer({{{targetBlock, finalColor}}})
-                requestsSent = requestsSent + 1
-            end
-            task.wait(0.04)
-        end
-    end
-    
-    h:UnequipTools()
+    -- Network Throttling buffer safety flush
     if requestsSent >= 15 then
         task.wait(0.5)
         requestsSent = 0
