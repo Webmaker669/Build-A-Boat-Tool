@@ -11,6 +11,8 @@ local cCF = nil
 local uC = true
 local sP = false
 local isMin = false
+local isBuilding = false
+local cancelBuild = false
 
 local f = workspace:WaitForChild("Blocks"):WaitForChild(P.Name)
 
@@ -22,11 +24,17 @@ local function getZone()
         if zone then return zone end
     end
     for _, v in ipairs(workspace:GetChildren()) do
-        if v.Name:sub(-4) == "Zone" then
-            return v
-        end
+        if v.Name:sub(-4) == "Zone" then return v end
     end
     return workspace
+end
+
+-- Finds a tool by name in backpack OR character
+local function getTool(name)
+    local ch = P.Character
+    if not ch then return nil end
+    return P.Backpack:FindFirstChild(name)
+        or ch:FindFirstChild(name)
 end
 
 local pFld = Instance.new("Folder")
@@ -35,7 +43,7 @@ pFld.Parent = workspace
 
 local m = Instance.new("Frame")
 m.Parent = sG
-m.Size = UDim2.new(0, 340, 0, 320)
+m.Size = UDim2.new(0, 340, 0, 340)
 m.Position = UDim2.new(0.05, 0, 0.2, 0)
 m.BackgroundColor3 = Color3.fromRGB(24, 24, 28)
 m.BorderSizePixel = 0
@@ -52,16 +60,16 @@ hb.BorderSizePixel = 0
 hb.Active = true
 hb.ZIndex = 2
 
-local t = Instance.new("TextLabel")
-t.Parent = hb
-t.Size = UDim2.new(1, -80, 1, 0)
-t.Text = "  Seamless Circle Studio"
-t.TextColor3 = Color3.fromRGB(240, 240, 245)
-t.TextSize = 13
-t.Font = Enum.Font.SourceSansBold
-t.TextXAlignment = Enum.TextXAlignment.Left
-t.BackgroundTransparency = 1
-t.ZIndex = 2
+local tLbl = Instance.new("TextLabel")
+tLbl.Parent = hb
+tLbl.Size = UDim2.new(1, -80, 1, 0)
+tLbl.Text = "  Seamless Circle Studio"
+tLbl.TextColor3 = Color3.fromRGB(240, 240, 245)
+tLbl.TextSize = 13
+tLbl.Font = Enum.Font.SourceSansBold
+tLbl.TextXAlignment = Enum.TextXAlignment.Left
+tLbl.BackgroundTransparency = 1
+tLbl.ZIndex = 2
 
 local oB = Instance.new("TextButton")
 oB.Parent = sG
@@ -80,7 +88,7 @@ oBCorner.Parent = oB
 
 local cf = Instance.new("Frame")
 cf.Parent = m
-cf.Size = UDim2.new(1, 0, 0, 288)
+cf.Size = UDim2.new(1, 0, 0, 308)
 cf.Position = UDim2.new(0, 0, 0, 32)
 cf.BackgroundColor3 = Color3.fromRGB(30, 30, 35)
 cf.BorderSizePixel = 0
@@ -143,7 +151,7 @@ minBtn.MouseButton1Click:Connect(function()
     isMin = not isMin
     cf.Visible = not isMin
     minBtn.Text = isMin and "+" or "-"
-    m.Size = isMin and UDim2.new(0, 340, 0, 32) or UDim2.new(0, 340, 0, 320)
+    m.Size = isMin and UDim2.new(0, 340, 0, 32) or UDim2.new(0, 340, 0, 340)
 end)
 
 clsBtn.MouseButton1Click:Connect(function()
@@ -229,6 +237,41 @@ local iY = cI("Height (Y):", "2.0",        168, 96,  false)
 local aZ = cI("Length (Z):", "Calculated", 18,  124, true)
 local iC = cI("RGB Val:",    "1,1,1",      168, 124, false)
 
+-- Tool name inputs
+local function cIFull(n, p, x, y)
+    local l = Instance.new("TextLabel")
+    l.Parent = cf
+    l.Size = UDim2.new(0, 85, 0, 22)
+    l.Position = UDim2.new(0, x, 0, y)
+    l.Text = n
+    l.TextColor3 = Color3.fromRGB(180, 180, 185)
+    l.TextSize = 12
+    l.Font = Enum.Font.SourceSans
+    l.TextXAlignment = Enum.TextXAlignment.Left
+    l.BackgroundTransparency = 1
+
+    local b = Instance.new("TextBox")
+    b.Parent = cf
+    b.Size = UDim2.new(0, 205, 0, 22)
+    b.Position = UDim2.new(0, x + 87, 0, y)
+    b.BackgroundColor3 = Color3.fromRGB(44,44,50)
+    b.TextColor3 = Color3.new(1,1,1)
+    b.BorderSizePixel = 0
+    b.Text = p
+    b.ClearTextOnFocus = false
+    b.Font = Enum.Font.SourceSans
+    b.TextSize = 13
+
+    local corner = Instance.new("UICorner")
+    corner.CornerRadius = UDim.new(0, 4)
+    corner.Parent = b
+    return b
+end
+
+local tN1 = cIFull("Build Tool:",   "BuildingTool", 18, 152)
+local tN2 = cIFull("Scale Tool:",   "ScalingTool",  18, 178)
+local tN3 = cIFull("Paint Tool:",   "PaintingTool", 18, 204)
+
 local function cB(n, x, y, w, h, c)
     local btn = Instance.new("TextButton")
     btn.Parent = cf
@@ -246,10 +289,34 @@ local function cB(n, x, y, w, h, c)
     return btn
 end
 
-local sC = cB("SELECT CENTER",         20,  158, 145, 28, Color3.fromRGB(130,85,180))
-local pV = cB("PREVIEW: OFF",          175, 158, 145, 28, Color3.fromRGB(58,62,68))
-local tB = cB("PAINTING: ON",          20,  194, 300, 28, Color3.fromRGB(0,110,185))
-local bD = cB("BUILD SEAMLESS CIRCLE", 20,  232, 300, 36, Color3.fromRGB(0,135,85))
+local sC = cB("SELECT CENTER",         20,  232, 145, 28, Color3.fromRGB(130,85,180))
+local pV = cB("PREVIEW: OFF",          175, 232, 145, 28, Color3.fromRGB(58,62,68))
+local tB = cB("PAINTING: ON",          20,  265, 300, 28, Color3.fromRGB(0,110,185))
+local bD = cB("BUILD SEAMLESS CIRCLE", 20,  300, 300, 36, Color3.fromRGB(0,135,85))
+
+-- Progress bar background
+local pbBg = Instance.new("Frame")
+pbBg.Parent = cf
+pbBg.Size = UDim2.new(0, 300, 0, 6)
+pbBg.Position = UDim2.new(0, 20, 0, 295)
+pbBg.BackgroundColor3 = Color3.fromRGB(50,50,56)
+pbBg.BorderSizePixel = 0
+pbBg.Visible = false
+
+local pbBgCorner = Instance.new("UICorner")
+pbBgCorner.CornerRadius = UDim.new(0, 3)
+pbBgCorner.Parent = pbBg
+
+-- Progress bar fill
+local pbFill = Instance.new("Frame")
+pbFill.Parent = pbBg
+pbFill.Size = UDim2.new(0, 0, 1, 0)
+pbFill.BackgroundColor3 = Color3.fromRGB(0,200,100)
+pbFill.BorderSizePixel = 0
+
+local pbFillCorner = Instance.new("UICorner")
+pbFillCorner.CornerRadius = UDim.new(0, 3)
+pbFillCorner.Parent = pbFill
 
 local function uP()
     local r  = tonumber(iR.Text) or 30
@@ -306,6 +373,7 @@ iY:GetPropertyChangedSignal("Text"):Connect(uP)
 iC:GetPropertyChangedSignal("Text"):Connect(pC)
 
 sC.MouseButton1Click:Connect(function()
+    if isBuilding then return end
     sC.Text = "CLICK PLOT PART..."
     sC.BackgroundColor3 = Color3.fromRGB(180,50,50)
     local conn
@@ -321,6 +389,7 @@ sC.MouseButton1Click:Connect(function()
 end)
 
 pV.MouseButton1Click:Connect(function()
+    if isBuilding then return end
     if not cCF then
         pV.Text = "SELECT CENTER FIRST"
         pV.BackgroundColor3 = Color3.fromRGB(180,50,50)
@@ -339,6 +408,7 @@ pV.MouseButton1Click:Connect(function()
 end)
 
 tB.MouseButton1Click:Connect(function()
+    if isBuilding then return end
     uC = not uC
     tB.Text = uC and "PAINTING: ON" or "PAINTING: OFF"
     tB.BackgroundColor3 = uC and Color3.fromRGB(0,110,185) or Color3.fromRGB(85,88,94)
@@ -347,15 +417,33 @@ tB.MouseButton1Click:Connect(function()
 end)
 
 bD.MouseButton1Click:Connect(function()
+    -- CANCEL if already building
+    if isBuilding then
+        cancelBuild = true
+        bD.Text = "CANCELLING..."
+        bD.BackgroundColor3 = Color3.fromRGB(140,50,50)
+        return
+    end
+
     if not cCF then
         sC.Text = "SET CENTER FIRST!"
         sC.BackgroundColor3 = Color3.fromRGB(180,50,50)
         return
     end
 
+    -- Validate tool names are filled in
+    local buildName = tN1.Text ~= "" and tN1.Text or "BuildingTool"
+    local scaleName = tN2.Text ~= "" and tN2.Text or "ScalingTool"
+    local paintName = tN3.Text ~= "" and tN3.Text or "PaintingTool"
+
+    isBuilding = true
+    cancelBuild = false
     pFld:ClearAllChildren()
-    bD.Text = "BUILDING..."
-    bD.BackgroundColor3 = Color3.fromRGB(180,130,0)
+
+    bD.Text = "CANCEL BUILD"
+    bD.BackgroundColor3 = Color3.fromRGB(180,50,50)
+    pbBg.Visible = true
+    pbFill.Size = UDim2.new(0, 0, 1, 0)
 
     local r  = tonumber(iR.Text)  or 30
     local nB = tonumber(iB.Text)  or 120
@@ -365,20 +453,29 @@ bD.MouseButton1Click:Connect(function()
 
     local ch = P.Character or P.CharacterAdded:Wait()
     local h  = ch:WaitForChild("Humanoid")
-
-    -- Detect zone from team at build time
     local wZ = getZone()
 
     for i = 1, nB do
+        -- Check cancel flag at top of every iteration
+        if cancelBuild then break end
+
         local a   = (i / nB) * (2 * math.pi)
         local bCF = cCF
                   * CFrame.new(math.cos(a) * r, 0, math.sin(a) * r)
                   * CFrame.Angles(0, -a, 0)
 
-        -- STEP 1: Place
-        local t1 = ch:WaitForChild("BuildingTool")
+        -- STEP 1: Place — find tool by user-supplied name
+        local t1 = getTool(buildName)
+        if not t1 then
+            bD.Text = "TOOL NOT FOUND: " .. buildName
+            bD.BackgroundColor3 = Color3.fromRGB(180,50,50)
+            break
+        end
+
         h:EquipTool(t1)
         task.wait(0.08)
+
+        if cancelBuild then h:UnequipTools() break end
 
         local beforeCount = #f:GetChildren()
 
@@ -398,6 +495,7 @@ bD.MouseButton1Click:Connect(function()
         repeat
             task.wait(0.05)
             elapsed += 0.05
+            if cancelBuild then break end
             local children = f:GetChildren()
             if #children > beforeCount then
                 for idx = #children, 1, -1 do
@@ -409,28 +507,47 @@ bD.MouseButton1Click:Connect(function()
             end
         until pB ~= nil or elapsed >= 3
 
+        if cancelBuild then h:UnequipTools() break end
+
         if pB then
             -- STEP 3: Scale
-            local t2 = ch:WaitForChild("ScalingTool")
-            h:EquipTool(t2)
-            task.wait(0.08)
-            t2:WaitForChild("RF"):InvokeServer(pB, Vector3.new(sX, sY, sZ), bCF)
-            task.wait(0.08)
+            local t2 = getTool(scaleName)
+            if t2 then
+                h:EquipTool(t2)
+                task.wait(0.08)
+                if not cancelBuild then
+                    t2:WaitForChild("RF"):InvokeServer(pB, Vector3.new(sX, sY, sZ), bCF)
+                end
+                task.wait(0.08)
+            end
 
             -- STEP 4: Paint
-            if uC then
-                local t3 = ch:WaitForChild("PaintingTool")
-                h:EquipTool(t3)
-                task.wait(0.08)
-                t3:WaitForChild("RF"):InvokeServer({{{pB, cP.BackgroundColor3}}})
-                task.wait(0.08)
+            if uC and not cancelBuild then
+                local t3 = getTool(paintName)
+                if t3 then
+                    h:EquipTool(t3)
+                    task.wait(0.08)
+                    if not cancelBuild then
+                        t3:WaitForChild("RF"):InvokeServer({{{pB, cP.BackgroundColor3}}})
+                    end
+                    task.wait(0.08)
+                end
             end
         end
 
         h:UnequipTools()
         task.wait(0.08)
+
+        -- Update progress bar
+        pbFill.Size = UDim2.new(i / nB, 0, 1, 0)
     end
 
+    -- Cleanup
+    isBuilding = false
+    cancelBuild = false
+    h:UnequipTools()
+    pbBg.Visible = false
+    pbFill.Size = UDim2.new(0, 0, 1, 0)
     bD.Text = "BUILD SEAMLESS CIRCLE"
     bD.BackgroundColor3 = Color3.fromRGB(0,135,85)
 end)
