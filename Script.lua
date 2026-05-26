@@ -27,7 +27,7 @@ Instance.new("UICorner", ReopenButton).CornerRadius = UDim.new(0, 6)
 
 local Title = Instance.new("TextLabel", MainFrame)
 Title.Size = UDim2.new(1, 0, 0, 45)
-Title.Text = "   CIRCLE BUILDER SUITE"
+Title.Text = "   CIRCLE BUILDER SUITE" -- Spaced out to prevent overlap
 Title.TextColor3 = Color3.fromRGB(255, 255, 255)
 Title.TextSize = 12
 Title.Font = Enum.Font.GothamBold
@@ -431,7 +431,7 @@ btnBuild.MouseButton1Click:Connect(function()
         if dynamicBlockPath then
             local sVec = (vector and vector.create) and vector.create(sizeX, sizeY, sizeZ) or Vector3.new(sizeX, sizeY, sizeZ)
             sRF:InvokeServer(dynamicBlockPath, sVec, pCF) task.wait(0.01)
-            local col = uiData.btnColorPicker.BackgroundColor3 pRF:InvokeServer({{{dynamicBlockPath, col}, {dynamicBlockPath, col}, {dynamicBlockPath, col}}})
+            local col = uiData.btnColorPicker.BackgroundColor3 pRF:InvokeServer({[[[#19]]]})
         end
         task.wait(0.03)
     end
